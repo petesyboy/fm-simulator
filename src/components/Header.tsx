@@ -28,7 +28,7 @@ const Header: React.FC = () => {
       {/* Topmost Brand Header Bar */}
       <header className="header-brand">
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span className="brand-logo">Third Party Orchestration</span>
+          <span className="brand-logo">Gigamon Flow Mapping Example</span>
           <div className="tab monitoring-session active">Monitoring Session</div>
         </div>
 
