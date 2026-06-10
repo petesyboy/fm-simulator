@@ -70,6 +70,7 @@ export type RFState = {
   clearCanvas: () => void;
   loadDemo: () => void;
   groupSelectedNodes: () => void;
+  ungroupGroup: (groupId: string) => void;
 };
 
 // Create a default topology
@@ -392,6 +393,44 @@ export const useStore = create<RFState>((set, get) => ({
 
     set({
       nodes: [groupNode, ...updatedNodes],
+    });
+  },
+
+  ungroupGroup: (groupId: string) => {
+    const parentNode = get().nodes.find((n) => n.id === groupId);
+    if (!parentNode) return;
+
+    const parentX = parentNode.position.x;
+    const parentY = parentNode.position.y;
+
+    // 1. Un-nest child nodes: remove parentId, restore absolute position
+    let updatedNodes = get().nodes.map((node) => {
+      if (node.parentId === groupId) {
+        return {
+          ...node,
+          parentId: undefined,
+          position: {
+            x: node.position.x + parentX,
+            y: node.position.y + parentY,
+          },
+          extent: undefined,
+        };
+      }
+      return node;
+    });
+
+    // 2. Remove the group node
+    updatedNodes = updatedNodes.filter((n) => n.id !== groupId);
+
+    // 3. Remove any edges connected to the group node
+    const updatedEdges = get().edges.filter(
+      (edge) => edge.source !== groupId && edge.target !== groupId
+    );
+
+    set({
+      nodes: updatedNodes,
+      edges: updatedEdges,
+      selectedNodeId: get().selectedNodeId === groupId ? null : get().selectedNodeId,
     });
   },
 }));
