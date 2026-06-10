@@ -9,25 +9,55 @@ import {
 import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/store';
-import { InputNode, FilterNode, ToolNode, MapNode } from './CustomNodes';
+import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode } from './CustomNodes';
 
 const nodeTypes = {
   inputNode: InputNode,
   filterNode: FilterNode,
   toolNode: ToolNode,
   mapNode: MapNode,
+  gigaStreamNode: GigaStreamNode,
+  gigaSmartNode: GigaSmartNode,
 };
 
 const CanvasArea: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const nodes = useStore((state) => state.nodes);
   const edges = useStore((state) => state.edges);
+  const activeEdges = useStore((state) => state.activeEdges);
+  const blockedEdges = useStore((state) => state.blockedEdges);
+  const isRunning = useStore((state) => state.isRunning);
+  
   const onNodesChange = useStore((state) => state.onNodesChange);
   const onEdgesChange = useStore((state) => state.onEdgesChange);
   const onConnect = useStore((state) => state.onConnect);
   const addNode = useStore((state) => state.addNode);
   const setSelectedNodeId = useStore((state) => state.setSelectedNodeId);
   const { screenToFlowPosition } = useReactFlow();
+
+  // Dynamically apply classes and animation flags to connections
+  const styledEdges = edges.map((edge) => {
+    const isActive = activeEdges.includes(edge.id);
+    const isBlocked = blockedEdges.includes(edge.id);
+    
+    let className = '';
+    let animated = false;
+    
+    if (isRunning) {
+      if (isActive) {
+        className = 'active-flow';
+        animated = true;
+      } else if (isBlocked) {
+        className = 'blocked-flow';
+      }
+    }
+    
+    return {
+      ...edge,
+      className,
+      animated,
+    };
+  });
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -76,7 +106,7 @@ const CanvasArea: React.FC = () => {
     <div className="canvas-wrapper" ref={reactFlowWrapper}>
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={styledEdges}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}

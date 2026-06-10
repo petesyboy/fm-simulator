@@ -21,6 +21,10 @@ const Sidebar: React.FC = () => {
       <div className="draggable-item filter" draggable onDragStart={(e) => onDragStart(e, 'filterNode', 'IP Subnet Filter')}>IP Subnet Filter</div>
       <div className="draggable-item filter" draggable onDragStart={(e) => onDragStart(e, 'filterNode', 'Port Filter')}>Port Filter</div>
 
+      <h3>GigaSMART & Optimization</h3>
+      <div className="draggable-item gigasmart" draggable onDragStart={(e) => onDragStart(e, 'gigaStreamNode', 'GigaStream LB')}>GigaStream LB</div>
+      <div className="draggable-item gigasmart" draggable onDragStart={(e) => onDragStart(e, 'gigaSmartNode', 'GigaSMART Engine')}>GigaSMART Engine</div>
+
       <h3>Tools</h3>
       <div className="draggable-item tool" draggable onDragStart={(e) => onDragStart(e, 'toolNode', 'Forescout')}>Forescout</div>
       <div className="draggable-item tool" draggable onDragStart={(e) => onDragStart(e, 'toolNode', 'ExtraHop')}>ExtraHop</div>

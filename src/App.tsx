@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import CanvasArea from './components/CanvasArea';
 import ConfigPanel from './components/ConfigPanel';
+import SimulationEngine from './components/SimulationEngine';
+import TrafficGenerator from './components/TrafficGenerator';
 import { useStore } from './store/store';
 import './App.css';
 
@@ -30,8 +32,12 @@ function App() {
       <div className="main-content">
         <ReactFlowProvider>
           <Sidebar />
-          <CanvasArea />
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <CanvasArea />
+            <TrafficGenerator />
+          </div>
           <ConfigPanel />
+          <SimulationEngine />
         </ReactFlowProvider>
       </div>
     </div>
