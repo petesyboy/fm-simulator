@@ -26,6 +26,8 @@ export interface TrafficStream {
   protocol: string;
   bandwidth: number; // in Mbps
   active: boolean;
+  drift?: number;
+  lastDriftUpdate?: number;
 }
 
 export interface NodeMetrics {
@@ -137,7 +139,7 @@ const initialEdges: Edge[] = [
 const initialTraffic: TrafficStream[] = [
   {
     id: 't-1',
-    name: 'Web Prod Traffic',
+    name: 'Web Prod Traffic (10 Gbps)',
     sourceNodeId: defaultInputId,
     vlan: '100',
     ipSrc: '192.168.1.0/24',
@@ -145,12 +147,12 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '49152',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 150, // 150 Mbps
+    bandwidth: 10000, // 10 Gbps
     active: true,
   },
   {
     id: 't-2',
-    name: 'DB Sync Traffic',
+    name: 'DB Sync Traffic (1 Gbps)',
     sourceNodeId: defaultInputId,
     vlan: '200',
     ipSrc: '192.168.2.11',
@@ -158,12 +160,12 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '5432',
     portDst: '5432',
     protocol: 'tcp',
-    bandwidth: 80, // 80 Mbps
+    bandwidth: 1000, // 1 Gbps
     active: true,
   },
   {
     id: 't-3',
-    name: 'DNS Query Flood',
+    name: 'DNS Query Flood (1 Gbps)',
     sourceNodeId: defaultInputId,
     vlan: '100',
     ipSrc: '192.168.1.15',
@@ -171,12 +173,12 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '60124',
     portDst: '53',
     protocol: 'udp',
-    bandwidth: 35, // 35 Mbps
+    bandwidth: 1000, // 1 Gbps
     active: true,
   },
   {
     id: 't-4',
-    name: 'IPv6 Sync Flow',
+    name: 'IPv6 Sync Flow (10 Gbps)',
     sourceNodeId: defaultInputId,
     vlan: '300',
     ipSrc: '2001:db8::1',
@@ -184,7 +186,7 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '8080',
     portDst: '8080',
     protocol: 'tcp',
-    bandwidth: 45, // 45 Mbps
+    bandwidth: 10000, // 10 Gbps
     active: true,
   }
 ];
@@ -279,8 +281,18 @@ export const useStore = create<RFState>((set, get) => ({
   toggleSimulation: () => {
     const nextRunning = !get().isRunning;
     if (!nextRunning) {
-      // If stopping, reset active/blocked edge styles
-      set({ isRunning: false, activeEdges: [], blockedEdges: [] });
+      // If stopping, reset active/blocked edge styles and traffic stream drifts
+      const resetTraffic = get().trafficStreams.map((s) => ({
+        ...s,
+        drift: 1.0,
+        lastDriftUpdate: 0,
+      }));
+      set({ 
+        isRunning: false, 
+        activeEdges: [], 
+        blockedEdges: [], 
+        trafficStreams: resetTraffic 
+      });
     } else {
       set({ isRunning: true });
     }

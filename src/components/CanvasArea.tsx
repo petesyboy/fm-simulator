@@ -138,7 +138,8 @@ const CanvasArea: React.FC = () => {
       addNode(newNode);
 
       if (type === 'inputNode') {
-        const randomGbps = Math.floor(Math.random() * 100) + 1; // 1 to 100 Gbps
+        const speeds = [1, 10, 25, 40, 100];
+        const randomGbps = speeds[Math.floor(Math.random() * speeds.length)];
         const randomMbps = randomGbps * 1000;
         const randomSubnet = Math.floor(Math.random() * 254) + 1;
         const randomVlan = String(Math.floor(Math.random() * 900) + 100);

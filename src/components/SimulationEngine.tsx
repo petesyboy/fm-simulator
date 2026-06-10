@@ -131,6 +131,30 @@ const SimulationEngine: React.FC = () => {
         }
       });
 
+      // 1.5. Update Traffic Stream drift multipliers (+/- 5% from base, every 2 seconds)
+      currentTraffic.forEach((stream) => {
+        if (!stream.active) return;
+        
+        const lastUpdate = (stream.lastDriftUpdate as number) || 0;
+        const currentDrift = (stream.drift as number) || 1.0;
+        
+        if (stream.drift === undefined) {
+          useStore.getState().updateTrafficStream(stream.id, {
+            drift: 1.0,
+            lastDriftUpdate: now,
+          });
+        } else if (now - lastUpdate >= 2000) {
+          const delta = (Math.random() * 3 - 1.5) / 100; // -1.5% to +1.5% drift
+          let newDrift = currentDrift + delta;
+          if (newDrift < 0.95) newDrift = 0.95;
+          if (newDrift > 1.05) newDrift = 1.05;
+          useStore.getState().updateTrafficStream(stream.id, {
+            drift: newDrift,
+            lastDriftUpdate: now,
+          });
+        }
+      });
+
       // 2. Initialize metrics for all nodes
       const metrics: Record<string, NodeMetrics> = {};
       currentNodes.forEach((node) => {
@@ -163,9 +187,14 @@ const SimulationEngine: React.FC = () => {
         
         const sourceNode = currentNodes.find((n) => n.id === stream.sourceNodeId);
         if (sourceNode) {
+          const driftedBandwidth = stream.bandwidth * (stream.drift || 1.0);
           queue.push({
             nodeId: sourceNode.id,
-            stream: { ...stream, trafficType: 'packet' },
+            stream: { 
+              ...stream, 
+              bandwidth: driftedBandwidth, 
+              trafficType: 'packet' 
+            },
             edgePath: [],
           });
         }

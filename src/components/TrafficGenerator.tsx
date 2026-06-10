@@ -21,7 +21,7 @@ const TrafficGenerator: React.FC = () => {
 
     const newStream: TrafficStream = {
       id: `t-${Date.now()}`,
-      name: `Traffic Stream ${trafficStreams.length + 1}`,
+      name: `Traffic Stream ${trafficStreams.length + 1} (10 Gbps)`,
       sourceNodeId: inputPorts[0].id,
       vlan: '100',
       ipSrc: '192.168.1.50',
@@ -29,7 +29,7 @@ const TrafficGenerator: React.FC = () => {
       portSrc: '50231',
       portDst: '443',
       protocol: 'tcp',
-      bandwidth: 100, // 100 Mbps
+      bandwidth: 10000, // 10 Gbps
       active: true,
     };
 
@@ -86,7 +86,7 @@ const TrafficGenerator: React.FC = () => {
                 <th style={{ padding: '6px 4px' }}>Source IP</th>
                 <th style={{ padding: '6px 4px' }}>Dest IP</th>
                 <th style={{ padding: '6px 4px', width: '70px' }}>Dst Port</th>
-                <th style={{ padding: '6px 4px', width: '100px' }}>Rate (Mbps)</th>
+                <th style={{ padding: '6px 4px', width: '100px' }}>Rate</th>
                 <th style={{ padding: '6px 4px', width: '90px' }}>Status</th>
                 <th style={{ padding: '6px 4px', width: '60px', textAlign: 'center' }}>Active</th>
                 <th style={{ padding: '6px 4px', width: '60px' }}>Action</th>
@@ -162,16 +162,23 @@ const TrafficGenerator: React.FC = () => {
                     />
                   </td>
                   <td style={{ padding: '4px 2px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10000"
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <select
                         value={stream.bandwidth}
                         onChange={(e) => handleFieldChange(stream.id, 'bandwidth', Number(e.target.value))}
-                        style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '11px', padding: '2px 4px', borderRadius: '4px', width: '50px' }}
-                      />
-                      <span>M</span>
+                        style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '11px', padding: '2px 4px', borderRadius: '4px', width: '90px' }}
+                      >
+                        <option value={1000}>1 Gbps</option>
+                        <option value={10000}>10 Gbps</option>
+                        <option value={25000}>25 Gbps</option>
+                        <option value={40000}>40 Gbps</option>
+                        <option value={100000}>100 Gbps</option>
+                      </select>
+                      {isRunning && stream.active && (
+                        <span style={{ fontSize: '10px', color: '#4caf50', fontWeight: 'bold', display: 'block', paddingLeft: '2px' }}>
+                          ~{((stream.bandwidth * (stream.drift || 1.0)) / 1000).toFixed(2)} Gbps
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td style={{ padding: '4px 2px' }}>
