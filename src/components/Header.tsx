@@ -82,15 +82,6 @@ const Header: React.FC = () => {
           <span>Active Ingress Port Loads: <b>{activeStreamsCount} / {trafficStreams.length}</b></span>
         </div>
 
-        {/* Gigamon Stage Buttons */}
-        <div className="stage-selector">
-          <button className="stage-btn">OVERVIEW</button>
-          <button className="stage-btn">SOURCES</button>
-          <button className="stage-btn">TRAFFIC ACQUISITION</button>
-          <button className="stage-btn active">TRAFFIC PROCESSING</button>
-          <button className="stage-btn">V SERIES NODES</button>
-          <button className="stage-btn">TOPOLOGY</button>
-        </div>
       </div>
     </div>
   );
