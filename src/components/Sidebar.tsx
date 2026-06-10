@@ -216,9 +216,7 @@ const Sidebar: React.FC = () => {
   const [openSections, setOpenSections] = useState({
     demo: true, // Demonstration section expanded by default
     new: true,
-    library: false,
     apps: true, // Expanded by default to showcase the new draggable applications
-    tunnels: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -386,16 +384,7 @@ const Sidebar: React.FC = () => {
           )}
         </div>
 
-        {/* Collapsible Section: Map Library */}
-        <div className="tree-section">
-          <div className="tree-header" onClick={() => toggleSection('library')}>
-            <span className={`chevron ${openSections.library ? 'open' : ''}`}>▶</span>
-            <span>Map Library</span>
-          </div>
-          {openSections.library && (
-            <div className="tree-content placeholder-text">No library items available.</div>
-          )}
-        </div>
+
 
         {/* Collapsible Section: Applications (Contains 14 Draggable applications) */}
         <div className="tree-section">
@@ -427,16 +416,7 @@ const Sidebar: React.FC = () => {
           )}
         </div>
 
-        {/* Collapsible Section: Tunnels */}
-        <div className="tree-section">
-          <div className="tree-header" onClick={() => toggleSection('tunnels')}>
-            <span className={`chevron ${openSections.tunnels ? 'open' : ''}`}>▶</span>
-            <span>Tunnels</span>
-          </div>
-          {openSections.tunnels && (
-            <div className="tree-content placeholder-text">No tunnels configured.</div>
-          )}
-        </div>
+
       </aside>
     </>
   );
