@@ -255,10 +255,10 @@ const ConfigPanel: React.FC = () => {
         className={`config-panel ${isCollapsed ? 'collapsed' : ''}`}
         style={{
           width: isCollapsed ? '0px' : '320px',
-          padding: isCollapsed ? '0px' : '16px',
+          padding: '0px',
           borderLeft: isCollapsed ? 'none' : '1px solid var(--border-color)',
           position: 'relative',
-          overflow: isCollapsed ? 'visible' : 'auto',
+          overflow: 'visible',
           transition: 'width 0.3s ease, padding 0.3s ease, border-color 0.3s ease',
           flexShrink: 0
         }}
@@ -292,7 +292,7 @@ const ConfigPanel: React.FC = () => {
         </button>
 
         {!isCollapsed && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '288px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '320px', height: '100%', padding: '16px', overflowY: 'auto', boxSizing: 'border-box' }}>
             <h2>Global Dashboard</h2>
             
             {isRunning ? (
@@ -418,10 +418,10 @@ const ConfigPanel: React.FC = () => {
       className={`config-panel ${isCollapsed ? 'collapsed' : ''}`}
       style={{
         width: isCollapsed ? '0px' : '320px',
-        padding: isCollapsed ? '0px' : '16px',
+        padding: '0px',
         borderLeft: isCollapsed ? 'none' : '1px solid var(--border-color)',
         position: 'relative',
-        overflow: isCollapsed ? 'visible' : 'auto',
+        overflow: 'visible',
         transition: 'width 0.3s ease, padding 0.3s ease, border-color 0.3s ease',
         flexShrink: 0
       }}
@@ -455,7 +455,7 @@ const ConfigPanel: React.FC = () => {
       </button>
 
       {!isCollapsed && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '288px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '320px', height: '100%', padding: '16px', overflowY: 'auto', boxSizing: 'border-box' }}>
           <h2>Edit Node Configuration</h2>
       
       <div className="form-group">
