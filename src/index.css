@@ -1,55 +1,55 @@
 :root {
-  --bg-primary: #0b0f19;
-  --bg-secondary: #121824;
-  --bg-tertiary: #1b2336;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.2);
+  --bg-primary: #121212;      /* Canvas/main background */
+  --bg-secondary: #161616;    /* Inner elements sidebar */
+  --bg-tertiary: #1e1e1e;     /* Outer sessions sidebar */
+  --bg-header: #0d0d0d;       /* Top brand header */
+  --border-color: #282828;    /* Thin layout dividers */
+  --border-hover: #3e3e3e;
   
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #ffffff;
+  --text-secondary: #9e9e9e;
+  --text-muted: #5a5a5a;
 
-  --color-input: #4caf50;
-  --color-map: #b388ff;
-  --color-filter: #00b0ff;
-  --color-tool: #ff9100;
-  --color-gigasmart: #00e5ff;
+  --color-blue: #007cff;      /* Gigamon primary blue */
+  --color-green: #25b34b;     /* Gigamon primary green */
+  --color-orange: #ff9100;
   
-  --glow-input: 0 0 12px rgba(76, 175, 80, 0.35);
-  --glow-map: 0 0 12px rgba(179, 136, 255, 0.35);
-  --glow-filter: 0 0 12px rgba(0, 176, 255, 0.35);
-  --glow-tool: 0 0 12px rgba(255, 145, 0, 0.35);
-  --glow-gigasmart: 0 0 12px rgba(0, 229, 255, 0.35);
+  --color-input: #007cff;
+  --color-map: #007cff;
+  --color-filter: #0091ea;
+  --color-tool: #25b34b;
+  --color-gigasmart: #0091ea;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  font-size: 13px;
 }
 
 code {
   font-family: 'Fira Code', 'Courier New', monospace;
-  font-size: 12px;
+  font-size: 11px;
 }
 
-/* Custom Scrollbar for premium dark feel */
+/* Custom Scrollbar for industrial design */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: 3px;
+  background: #2a2a2a;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #3e3e3e;
 }

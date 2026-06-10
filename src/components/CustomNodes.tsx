@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position, NodeResizer, type NodeProps } from '@xyflow/react';
 import { useStore, type MapCondition } from '../store/store';
+import { MapIcon, GreenCircleIcon, SmartIcon, AppIcon, SpanIcon, TapIcon, ErspanIcon, PacketToolIcon, MetadataToolIcon } from './Sidebar';
 
 // Helper to format bps/Mbps
 const formatBandwidth = (bps: number | undefined): string => {
@@ -14,16 +15,35 @@ const formatBandwidth = (bps: number | undefined): string => {
 export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
+  const configType = (data.configType as string) || '';
+
+  const renderIcon = () => {
+    if (configType.startsWith('SPAN')) return <SpanIcon size={16} />;
+    if (configType.startsWith('TAP')) return <TapIcon size={16} />;
+    if (configType.startsWith('ERSPAN')) return <ErspanIcon size={16} />;
+    return <MapIcon size={16} />;
+  };
+
+  const nodeTypeLabel = configType.startsWith('SPAN') 
+    ? 'SPAN Input Port' 
+    : configType.startsWith('TAP') 
+    ? 'TAP Hardware Device' 
+    : configType.startsWith('ERSPAN') 
+    ? 'ERSPAN Tunnel Input' 
+    : 'Network Input';
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
       <div className={`custom-node input-node ${selected ? 'selected-node' : ''}`}>
         <div className="node-header">
-          <span>📥 {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {renderIcon()}
+            <span className="node-title">{data.label as string}</span>
+          </div>
         </div>
-        <div className="node-type-label">Network Input</div>
-        <div className="node-meta">Source: {data.configType as string}</div>
+        <div className="node-type-label" style={{ display: 'block' }}>{nodeTypeLabel}</div>
+        <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8 }}>Type: {configType}</div>
         
         {isRunning && (
           <div className="node-metrics">
@@ -43,21 +63,34 @@ export const MapNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
       <div className={`custom-node map-node ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <span>🗺️ {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MapIcon size={16} />
+            <span className="node-title">{data.label as string}</span>
+          </div>
+          <span style={{ fontSize: '12px', color: '#666', cursor: 'pointer' }}>⋮</span>
         </div>
-        <div className="node-type-label">Traffic Map</div>
-        <div className="node-meta">
-          Rules: {conditions.length > 0 ? `${conditions.length} condition(s)` : 'Pass All'}
+        <div className="node-meta-small">
+          {conditions.length} rules(s)
+        </div>
+        
+        {/* Nested chip row matching the screenshot */}
+        <div className="node-chip-row">
+          <div className="node-inner-chip">
+            Pass ({conditions.length} rules)
+          </div>
+          <div className="node-port-chip">
+            P1
+          </div>
         </div>
         
         {isRunning && (
-          <div className="node-metrics">
-            <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
-            <span>Tx: {formatBandwidth(metrics?.txBps)}</span>
+          <div className="node-metrics" style={{ marginTop: '4px' }}>
+            <span>In: {formatBandwidth(metrics?.rxBps)}</span>
+            <span>Out: {formatBandwidth(metrics?.txBps)}</span>
           </div>
         )}
         <Handle type="source" position={Position.Right} id="out" />
@@ -72,17 +105,20 @@ export const FilterNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
       <div className={`custom-node filter-node ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <span>🔍 {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <SmartIcon size={16} />
+            <span className="node-title">{data.label as string}</span>
+          </div>
         </div>
         <div className="node-type-label">Transformation / Filter</div>
         
         <div className="node-meta">
           {data.configType === 'VLAN Filter' && <span>VLANs: {data.vlanIds as string || 'None'}</span>}
-          {data.configType === 'IP Subnet Filter' && <span>IP Subnet: {data.ipSubnet as string || 'None'}</span>}
+          {data.configType === 'IP Subnet Filter' && <span>Subnet: {data.ipSubnet as string || 'None'}</span>}
           {data.configType === 'Port Filter' && <span>Ports: {data.ports as string || 'None'}</span>}
         </div>
         
@@ -101,20 +137,68 @@ export const FilterNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
+  const configType = (data.configType as string) || '';
+  const toolName = (data.toolName as string) || '';
+  
+  const isPacketTool = configType === 'Packet Tool';
+  const isMetadataTool = configType === 'Metadata Tool';
+
+  const renderIcon = () => {
+    if (isPacketTool) return <PacketToolIcon size={16} />;
+    if (isMetadataTool) return <MetadataToolIcon size={16} />;
+    return <GreenCircleIcon size={16} />;
+  };
+
+  const status = data.status as 'warning' | 'optimal' | undefined;
+  const statusMessage = data.statusMessage as string | undefined;
+
+  let nodeClass = 'tool-node';
+  if (isPacketTool) nodeClass = 'tool-node packet-tool-node';
+  else if (isMetadataTool) nodeClass = 'tool-node metadata-tool-node';
+
+  if (status === 'warning') {
+    nodeClass += ' node-warning';
+  }
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
-      <div className={`custom-node tool-node ${selected ? 'selected-node' : ''}`}>
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
+      <div className={`custom-node ${nodeClass} ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <span>🛡️ {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {renderIcon()}
+            <span className="node-title">{data.label as string}</span>
+          </div>
+          <span style={{ fontSize: '12px', color: '#666' }}>⋮</span>
         </div>
-        <div className="node-type-label">Destination Tool</div>
-        <div className="node-meta">Type: {data.configType as string}</div>
+        <div className="node-meta-small" style={{ fontSize: '9px', fontWeight: 600 }}>
+          {toolName ? `${toolName}` : `Type: ${configType}`}
+        </div>
+        
+        {isMetadataTool && !!data.expectedFormat && (
+          <div className="node-meta-small" style={{ opacity: 0.7, fontSize: '8.5px' }}>
+            Expects: {data.expectedFormat as string}
+          </div>
+        )}
+
+        {isRunning && status === 'warning' && statusMessage && (
+          <div className="node-warning-badge" style={{ 
+            marginTop: '6px', 
+            padding: '4px 6px', 
+            fontSize: '9px', 
+            color: '#ff9100', 
+            background: 'rgba(255, 145, 0, 0.08)', 
+            border: '1px solid rgba(255, 145, 0, 0.2)',
+            borderRadius: '3px',
+            lineHeight: '1.2'
+          }}>
+            ⚠️ {statusMessage}
+          </div>
+        )}
         
         {isRunning && (
-          <div className="node-metrics">
+          <div className="node-metrics" style={{ marginTop: '8px' }}>
             <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
           </div>
         )}
@@ -123,7 +207,6 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   );
 };
 
-// New Load Balancer Node (GigaStream)
 export const GigaStreamNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
@@ -131,11 +214,14 @@ export const GigaStreamNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
       <div className={`custom-node gigasmart-node ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <span>⚖️ {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AppIcon type="Load Balancing" size={16} />
+            <span className="node-title">{data.label as string}</span>
+          </div>
         </div>
         <div className="node-type-label">GigaStream Load Balancer</div>
         <div className="node-meta">Method: {algorithm}</div>
@@ -152,7 +238,6 @@ export const GigaStreamNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   );
 };
 
-// New GigaSMART Packet Transformation Node (Deduplication / Slicing)
 export const GigaSmartNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
@@ -160,25 +245,39 @@ export const GigaSmartNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <>
-      <NodeResizer minWidth={170} minHeight={80} isVisible={selected} />
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
       <div className={`custom-node gigasmart-node ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <span>🧠 {data.label as string}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AppIcon type={actionType} size={16} rate={data.dedupRate as number} />
+            <span className="node-title">{data.label as string}</span>
+          </div>
+          <span style={{ fontSize: '12px', color: '#666' }}>⋮</span>
         </div>
-        <div className="node-type-label">GigaSMART Engine</div>
         
-        <div className="node-meta">
-          {actionType === 'Deduplication' && <span>Deduplication (10% Match)</span>}
-          {actionType === 'Header Stripping' && <span>Strip VXLAN/MPLS</span>}
-          {actionType === 'Packet Slicing' && <span>Slice payload to 64B</span>}
+        <div className="node-meta-small">
+          {actionType === 'Deduplication' && 'Action: Drop'}
+          {actionType === 'Packet Slicing' && 'Action: Slice'}
+          {actionType === 'Header Stripping' && 'Action: Strip'}
+          {actionType === 'Application Metadata' && `Format: ${data.metadataFormat as string || 'CEF'}`}
+          {actionType !== 'Deduplication' && actionType !== 'Packet Slicing' && actionType !== 'Header Stripping' && actionType !== 'Application Metadata' && `Action: ${actionType}`}
         </div>
+
+        {actionType === 'Application Metadata' && (
+          <div className="node-chip-row" style={{ marginTop: '4px' }}>
+            <div className="node-inner-chip" style={{ color: '#00e5ff', borderColor: 'rgba(0, 229, 255, 0.2)', fontSize: '8px', padding: '2px 4px' }}>
+              Output: {data.metadataFormat as string || 'CEF'}
+            </div>
+            <span style={{ fontSize: '8.5px', color: '#666' }}>Metadata Gen</span>
+          </div>
+        )}
         
         {isRunning && (
-          <div className="node-metrics">
+          <div className="node-metrics" style={{ marginTop: '8px' }}>
             <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
             <span className={actionType === 'Deduplication' ? 'drop' : ''}>
-              {actionType === 'Deduplication' ? `Dedup: ${formatBandwidth(metrics?.droppedPackets)}` : `Tx: ${formatBandwidth(metrics?.txBps)}`}
+              {actionType === 'Deduplication' ? `Drop: ${formatBandwidth(metrics?.droppedPackets)}` : `Tx: ${formatBandwidth(metrics?.txBps)}`}
             </span>
           </div>
         )}

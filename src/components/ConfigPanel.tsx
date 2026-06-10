@@ -58,7 +58,7 @@ const ConfigPanel: React.FC = () => {
       script += '# 2. Configure GigaSMART Operations\n';
       gigaSmartNodes.forEach((node, idx) => {
         const gsGroup = `gsgrp_${idx + 1}`;
-        const action = node.data?.actionType || 'Deduplication';
+        const action = String(node.data?.actionType || 'Deduplication');
         script += `apps giga-smart-group ${gsGroup} port 1/1/g${idx + 1}\n`;
         if (action === 'Deduplication') {
           script += `  de-duplication alias dedup_${idx + 1}\n`;
@@ -66,6 +66,12 @@ const ConfigPanel: React.FC = () => {
           script += `  packet-slicing alias slice_${idx + 1} length 64\n`;
         } else if (action === 'Header Stripping') {
           script += `  header-stripping alias strip_${idx + 1} protocol vxlan\n`;
+        } else if (action === 'SSL Decrypt') {
+          script += `  ssl-decryption alias ssl_${idx + 1}\n`;
+        } else if (action === 'Masking') {
+          script += `  masking alias mask_${idx + 1}\n`;
+        } else {
+          script += `  giga-smart-app alias ${action.toLowerCase().replace(/\s+/g, '_')}_${idx + 1}\n`;
         }
         script += 'exit\n';
       });
@@ -287,7 +293,15 @@ const ConfigPanel: React.FC = () => {
   };
 
   const handleGenericChange = (key: string, val: string) => {
-    updateNodeData(selectedNodeId, { [key]: val });
+    const updates: Record<string, unknown> = { [key]: val };
+    if (key === 'actionType' && val === 'Deduplication' && selectedNode?.data?.dedupRate === undefined) {
+      updates.dedupRate = Math.floor(Math.random() * 41) + 10;
+      updates.lastDedupUpdate = Date.now();
+    }
+    if (key === 'erspanId') {
+      updates.erspanId = parseInt(val, 10) || 10;
+    }
+    updateNodeData(selectedNodeId, updates);
   };
 
   // Map node condition handlers
@@ -320,6 +334,71 @@ const ConfigPanel: React.FC = () => {
           onChange={handleLabelChange}
         />
       </div>
+
+      {/* SPAN / TAP / ERSPAN Input specific properties */}
+      {selectedNode.type === 'inputNode' && (
+        <>
+          <div className="form-group">
+            <label>Input Port Class</label>
+            <select
+              value={(selectedNode.data?.configType as string) || 'SPAN'}
+              onChange={(e) => handleGenericChange('configType', e.target.value)}
+            >
+              <option value="SPAN">SPAN Port</option>
+              <option value="TAP">TAP Hardware Device</option>
+              <option value="ERSPAN">ERSPAN Tunnel Source</option>
+            </select>
+          </div>
+          {((selectedNode.data?.configType as string) === 'SPAN') && (
+            <div className="form-group">
+              <label>Port Speed</label>
+              <select
+                value={(selectedNode.data?.portSpeed as string) || '10G'}
+                onChange={(e) => handleGenericChange('portSpeed', e.target.value)}
+              >
+                <option value="1G">1 Gbps</option>
+                <option value="10G">10 Gbps</option>
+                <option value="40G">40 Gbps</option>
+                <option value="100G">100 Gbps</option>
+              </select>
+            </div>
+          )}
+          {((selectedNode.data?.configType as string) === 'TAP') && (
+            <div className="form-group">
+              <label>TAP Mode</label>
+              <select
+                value={(selectedNode.data?.tapMode as string) || 'Passive'}
+                onChange={(e) => handleGenericChange('tapMode', e.target.value)}
+              >
+                <option value="Passive">Passive (Failsafe Optical)</option>
+                <option value="Active">Active Bypass (Inline)</option>
+              </select>
+            </div>
+          )}
+          {((selectedNode.data?.configType as string) === 'ERSPAN') && (
+            <>
+              <div className="form-group">
+                <label>Tunnel ID (Session ID)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 10"
+                  value={(selectedNode.data?.erspanId as number) || 10}
+                  onChange={(e) => handleGenericChange('erspanId', e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>ERSPAN Source IP</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 192.168.10.5"
+                  value={(selectedNode.data?.erspanSrcIp as string) || '192.168.10.5'}
+                  onChange={(e) => handleGenericChange('erspanSrcIp', e.target.value)}
+                />
+              </div>
+            </>
+          )}
+        </>
+      )}
 
       {/* VLAN Filter specific properties */}
       {configType === 'VLAN Filter' && (
@@ -376,17 +455,111 @@ const ConfigPanel: React.FC = () => {
 
       {/* GigaSMART specific properties */}
       {selectedNode.type === 'gigaSmartNode' && (
-        <div className="form-group">
-          <label>GigaSMART Engine Operation</label>
-          <select
-            value={(selectedNode.data?.actionType as string) || 'Deduplication'}
-            onChange={(e) => handleGenericChange('actionType', e.target.value)}
-          >
-            <option value="Deduplication">Packet Deduplication</option>
-            <option value="Packet Slicing">Packet Slicing (Truncate Payload)</option>
-            <option value="Header Stripping">Header Stripping (VXLAN/MPLS)</option>
-          </select>
-        </div>
+        <>
+          <div className="form-group">
+            <label>GigaSMART Engine Operation</label>
+            <select
+              value={(selectedNode.data?.actionType as string) || 'Deduplication'}
+              onChange={(e) => handleGenericChange('actionType', e.target.value)}
+            >
+              <option value="Application Metadata">Application Metadata</option>
+              <option value="Application Visualization">Application Visualization</option>
+              <option value="5G-Cloud">5G-Cloud</option>
+              <option value="Deduplication">Packet Deduplication</option>
+              <option value="GVHTTP2">GVHTTP2</option>
+              <option value="Header Stripping">Header Stripping (VXLAN/MPLS)</option>
+              <option value="Masking">Masking</option>
+              <option value="AMX">AMX</option>
+              <option value="Pcapng">Pcapng</option>
+              <option value="5G-SBI">5G-SBI</option>
+              <option value="Sbipoe">Sbipoe</option>
+              <option value="Packet Slicing">Packet Slicing (Truncate Payload)</option>
+              <option value="SSL Decrypt">SSL Decrypt</option>
+            </select>
+          </div>
+          {((selectedNode.data?.actionType as string) === 'Application Metadata') && (
+            <div className="form-group">
+              <label>Output Metadata Format</label>
+              <select
+                value={(selectedNode.data?.metadataFormat as string) || 'CEF'}
+                onChange={(e) => handleGenericChange('metadataFormat', e.target.value)}
+              >
+                <option value="CEF">CEF (Common Event Format)</option>
+                <option value="JSON">JSON format</option>
+              </select>
+            </div>
+          )}
+          {((selectedNode.data?.actionType as string) === 'Deduplication' || (selectedNode.data?.actionType as string) === 'Dedup') && (
+            <div className="form-group">
+              <label>Deduplication Rate</label>
+              <div style={{ padding: '8px', background: 'rgba(0, 145, 234, 0.1)', borderRadius: '4px', border: '1px solid rgba(0, 145, 234, 0.2)', fontSize: '13px', fontWeight: 'bold', color: '#00e5ff' }}>
+                {selectedNode.data?.dedupRate !== undefined ? `${Math.round(selectedNode.data.dedupRate as number)}%` : 'Initializing...'}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Tool Node specific properties */}
+      {selectedNode.type === 'toolNode' && (
+        <>
+          <div className="form-group">
+            <label>Tool Class</label>
+            <select
+              value={(selectedNode.data?.configType as string) || 'Packet Tool'}
+              onChange={(e) => handleGenericChange('configType', e.target.value)}
+            >
+              <option value="Packet Tool">Packet Consuming Tool</option>
+              <option value="Metadata Tool">Metadata Consuming Tool</option>
+            </select>
+          </div>
+          {((selectedNode.data?.configType as string) === 'Packet Tool') && (
+            <div className="form-group">
+              <label>Capture Buffer Size</label>
+              <select
+                value={(selectedNode.data?.bufferSize as string) || '256MB'}
+                onChange={(e) => handleGenericChange('bufferSize', e.target.value)}
+              >
+                <option value="64MB">64 MB Buffer</option>
+                <option value="256MB">256 MB Buffer</option>
+                <option value="1GB">1 GB Circular Buffer</option>
+              </select>
+            </div>
+          )}
+          {((selectedNode.data?.configType as string) === 'Metadata Tool') && (
+            <>
+              <div className="form-group">
+                <label>Expected Format</label>
+                <select
+                  value={(selectedNode.data?.expectedFormat as string) || 'CEF'}
+                  onChange={(e) => handleGenericChange('expectedFormat', e.target.value)}
+                >
+                  <option value="CEF">CEF (Common Event Format)</option>
+                  <option value="JSON">JSON Format</option>
+                  <option value="Any">Any Format (Auto-Detect)</option>
+                </select>
+              </div>
+            </>
+          )}
+          <div className="form-group">
+            <label>Traffic Matching Status</label>
+            <div style={{
+              padding: '8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              background: selectedNode.data?.status === 'warning' ? 'rgba(255, 145, 0, 0.08)' : 'rgba(76, 175, 80, 0.08)',
+              border: selectedNode.data?.status === 'warning' ? '1px solid rgba(255, 145, 0, 0.2)' : '1px solid rgba(76, 175, 80, 0.2)',
+              color: selectedNode.data?.status === 'warning' ? '#ff9100' : '#4caf50'
+            }}>
+              {selectedNode.data?.status === 'warning' 
+                ? `⚠️ ${selectedNode.data?.statusMessage as string || 'Traffic Mismatch'}`
+                : isRunning && selectedNodeMetric && selectedNodeMetric.rxBps > 0
+                ? `✓ Receiving matching traffic (${selectedNode.data?.receivedFormat || 'Expected class'})`
+                : '✓ Idle (No Traffic)'}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Traffic Map condition builder */}

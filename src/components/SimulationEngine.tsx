@@ -1,6 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { useStore, type TrafficStream, type NodeMetrics, type MapCondition } from '../store/store';
 
+interface TrajectoryStream extends TrafficStream {
+  trafficType?: 'packet' | 'metadata';
+  metadataFormat?: 'CEF' | 'JSON';
+}
+
 // Match VLAN IDs: e.g. "100" in "100, 200, 300"
 const matchesVlan = (streamVlan: string, filterVlan: string | undefined): boolean => {
   if (!filterVlan) return false;
@@ -76,9 +81,6 @@ const evaluateMapConditions = (stream: TrafficStream, conditions: MapCondition[]
 const SimulationEngine: React.FC = () => {
   const isRunning = useStore((state) => state.isRunning);
   const simulationSpeed = useStore((state) => state.simulationSpeed);
-  const nodes = useStore((state) => state.nodes);
-  const edges = useStore((state) => state.edges);
-  const trafficStreams = useStore((state) => state.trafficStreams);
   const updateSimulationTick = useStore((state) => state.updateSimulationTick);
   
   const tickRef = useRef<number | null>(null);
@@ -93,9 +95,39 @@ const SimulationEngine: React.FC = () => {
     }
 
     const runSimulationStep = () => {
-      // 1. Initialize metrics for all nodes
+      // Read current state directly from store to prevent component re-triggering interval resets
+      const currentNodes = useStore.getState().nodes;
+      const currentEdges = useStore.getState().edges;
+      const currentTraffic = useStore.getState().trafficStreams;
+
+      // 1. Update GigaSMART Deduplication node rates (10%-50%, drift +/- 5% every 2 seconds)
+      const now = Date.now();
+      currentNodes.forEach((node) => {
+        if (
+          node.type === 'gigaSmartNode' && 
+          (node.data?.actionType === 'Deduplication' || node.data?.actionType === 'Dedup')
+        ) {
+          const lastUpdate = (node.data?.lastDedupUpdate as number) || 0;
+          const currentRate = (node.data?.dedupRate as number);
+          
+          if (!currentRate) {
+            // Initial rate: random between 10 and 50
+            const initialRate = Math.floor(Math.random() * 41) + 10;
+            useStore.getState().updateNodeData(node.id, { dedupRate: initialRate, lastDedupUpdate: now });
+          } else if (now - lastUpdate >= 2000) {
+            // Drift: random change of -5 to +5
+            const delta = Math.floor(Math.random() * 11) - 5;
+            let newRate = currentRate + delta;
+            if (newRate < 10) newRate = 10;
+            if (newRate > 50) newRate = 50;
+            useStore.getState().updateNodeData(node.id, { dedupRate: newRate, lastDedupUpdate: now });
+          }
+        }
+      });
+
+      // 2. Initialize metrics for all nodes
       const metrics: Record<string, NodeMetrics> = {};
-      nodes.forEach((node) => {
+      currentNodes.forEach((node) => {
         metrics[node.id] = {
           rxBps: 0,
           txBps: 0,
@@ -108,69 +140,63 @@ const SimulationEngine: React.FC = () => {
       const activeEdgeSet = new Set<string>();
       const blockedEdgeSet = new Set<string>();
 
-      // 2. Setup DFS/BFS traversal queue
-      // Queue items track the nodeId, the traffic stream properties, and the path of edges traversed
+      // 3. Setup traversal queue
       interface QueueItem {
         nodeId: string;
-        stream: TrafficStream;
+        stream: TrajectoryStream;
         edgePath: string[];
       }
 
       const queue: QueueItem[] = [];
+      const toolReceivedStreams: Record<string, TrajectoryStream[]> = {};
 
       // Find starting nodes for all active traffic streams
-      trafficStreams.forEach((stream) => {
+      currentTraffic.forEach((stream) => {
         if (!stream.active) return;
         
-        // Find input node
-        const sourceNode = nodes.find((n) => n.id === stream.sourceNodeId);
+        const sourceNode = currentNodes.find((n) => n.id === stream.sourceNodeId);
         if (sourceNode) {
           queue.push({
             nodeId: sourceNode.id,
-            stream: { ...stream },
+            stream: { ...stream, trafficType: 'packet' },
             edgePath: [],
           });
         }
       });
 
-      // Avoid infinite loops in cycle graphs
       let iterations = 0;
       const maxIterations = 200;
 
       while (queue.length > 0 && iterations < maxIterations) {
         iterations++;
         const item = queue.shift()!;
-        const node = nodes.find((n) => n.id === item.nodeId);
+        const node = currentNodes.find((n) => n.id === item.nodeId);
         if (!node) continue;
 
         const nodeMetric = metrics[node.id];
         if (!nodeMetric) continue;
 
-        // Calculate approximate packet rates (assuming average packet size of 500 bytes)
-        // 1 Mbps = 1000000 bps / (8 * 500) = 250 packets per second
         const packetsPerSecond = item.stream.bandwidth * 250;
 
-        // If this is the start node, it just transmits
         if (node.id === item.stream.sourceNodeId && item.edgePath.length === 0) {
           nodeMetric.txBps += item.stream.bandwidth;
           nodeMetric.txPackets += packetsPerSecond;
         } else {
-          // Otherwise it receives this bandwidth
           nodeMetric.rxBps += item.stream.bandwidth;
           nodeMetric.rxPackets += packetsPerSecond;
         }
 
-        // Get outbound edges
-        const outboundEdges = edges.filter((e) => e.source === node.id);
+        const outboundEdges = currentEdges.filter((e) => e.source === node.id);
 
-        // If it's a Tool (terminal node), stop traversing
         if (node.type === 'toolNode') {
-          // Tool receives but does not transmit
+          if (!toolReceivedStreams[node.id]) {
+            toolReceivedStreams[node.id] = [];
+          }
+          toolReceivedStreams[node.id].push(item.stream);
           continue;
         }
 
-        // Determine forwarding logic based on node type
-        let forwardStream: TrafficStream | null = { ...item.stream };
+        let forwardStream: TrajectoryStream | null = { ...item.stream };
         let dropBandwidth = 0;
 
         if (node.type === 'filterNode') {
@@ -191,7 +217,6 @@ const SimulationEngine: React.FC = () => {
             nodeMetric.txBps += item.stream.bandwidth;
             nodeMetric.txPackets += packetsPerSecond;
           } else {
-            // Drop traffic
             dropBandwidth = item.stream.bandwidth;
             nodeMetric.droppedPackets += dropBandwidth;
             forwardStream = null;
@@ -211,32 +236,61 @@ const SimulationEngine: React.FC = () => {
         else if (node.type === 'gigaSmartNode') {
           const actionType = node.data?.actionType as string || 'Deduplication';
           
-          if (actionType === 'Deduplication') {
-            // Simulate 10% duplicate drop
-            dropBandwidth = item.stream.bandwidth * 0.1;
-            const validBandwidth = item.stream.bandwidth * 0.9;
+          if (actionType === 'Deduplication' || actionType === 'Dedup') {
+            // Dynamic Deduplication rate matching the icon's overlay percentage
+            const dedupRate = (node.data?.dedupRate as number) || 20;
+            const dropFraction = dedupRate / 100;
+
+            dropBandwidth = item.stream.bandwidth * dropFraction;
+            const validBandwidth = item.stream.bandwidth * (1 - dropFraction);
+
             nodeMetric.droppedPackets += dropBandwidth;
             nodeMetric.txBps += validBandwidth;
             nodeMetric.txPackets += validBandwidth * 250;
             forwardStream = { ...item.stream, bandwidth: validBandwidth };
           } 
+          else if (actionType === 'Application Metadata') {
+            const format = (node.data?.metadataFormat as string) || 'CEF';
+            const metadataBandwidth = item.stream.bandwidth * 0.1;
+
+            nodeMetric.txBps += metadataBandwidth;
+            nodeMetric.txPackets += metadataBandwidth * 250;
+            forwardStream = { 
+              ...item.stream, 
+              bandwidth: metadataBandwidth, 
+              trafficType: 'metadata', 
+              metadataFormat: format as 'CEF' | 'JSON'
+            };
+          }
           else if (actionType === 'Packet Slicing') {
-            // Slice payload: reduces bandwidth throughput by 40% (since payloads are smaller)
             const slicedBandwidth = item.stream.bandwidth * 0.6;
             nodeMetric.txBps += slicedBandwidth;
-            nodeMetric.txPackets += packetsPerSecond; // packet count stays same!
+            nodeMetric.txPackets += packetsPerSecond;
             forwardStream = { ...item.stream, bandwidth: slicedBandwidth };
           } 
           else if (actionType === 'Header Stripping') {
-            // Header stripping: reduces bandwidth slightly (5%)
             const strippedBandwidth = item.stream.bandwidth * 0.95;
             nodeMetric.txBps += strippedBandwidth;
             nodeMetric.txPackets += packetsPerSecond;
             forwardStream = { ...item.stream, bandwidth: strippedBandwidth };
           }
+          else {
+            // Custom GigaSMART App processing (e.g. SSL Decrypt, Masking, etc.)
+            let scale = 1.0;
+            if (actionType === 'SSL Decrypt' || actionType === 'Masking') {
+              scale = 0.95;
+            }
+            const outputBandwidth = item.stream.bandwidth * scale;
+            if (scale < 1.0) {
+              dropBandwidth = item.stream.bandwidth * (1 - scale);
+              nodeMetric.droppedPackets += dropBandwidth;
+            }
+            nodeMetric.txBps += outputBandwidth;
+            nodeMetric.txPackets += packetsPerSecond;
+            forwardStream = { ...item.stream, bandwidth: outputBandwidth };
+          }
         }
         else if (node.type === 'gigaStreamNode') {
-          // Load balancer: splits incoming traffic equally among all outbound edges
           if (outboundEdges.length > 0) {
             nodeMetric.txBps += item.stream.bandwidth;
             nodeMetric.txPackets += packetsPerSecond;
@@ -251,17 +305,14 @@ const SimulationEngine: React.FC = () => {
                 edgePath: [...item.edgePath, edge.id],
               });
             });
-            // We handled queueing for each edge here, so we skip standard outbound queueing below
             continue;
           }
         }
         else {
-          // Default node (e.g. general pass-through): just forward everything
           nodeMetric.txBps += item.stream.bandwidth;
           nodeMetric.txPackets += packetsPerSecond;
         }
 
-        // Propagate forwardStream to outbound links
         if (forwardStream && forwardStream.bandwidth > 0 && outboundEdges.length > 0) {
           outboundEdges.forEach((edge) => {
             activeEdgeSet.add(edge.id);
@@ -272,20 +323,15 @@ const SimulationEngine: React.FC = () => {
             });
           });
         } else if (dropBandwidth > 0 && outboundEdges.length > 0) {
-          // If traffic was dropped/blocked here, mark the outbound links as blocked
           outboundEdges.forEach((edge) => {
             blockedEdgeSet.add(edge.id);
           });
         }
       }
 
-      // Add edge paths of all successfully propagated traffic to active edges
-      // (This covers the inbound edges that successfully brought traffic to nodes)
-      edges.forEach((edge) => {
-        // If the source node had traffic, the connection was active
+      currentEdges.forEach((edge) => {
         const sourceMetric = metrics[edge.source];
         if (sourceMetric && sourceMetric.txBps > 0 && !activeEdgeSet.has(edge.id)) {
-          // If it didn't successfully propagate *past* target, but reached target, mark it active
           const targetMetric = metrics[edge.target];
           if (targetMetric && targetMetric.rxBps > 0) {
             activeEdgeSet.add(edge.id);
@@ -293,14 +339,74 @@ const SimulationEngine: React.FC = () => {
         }
       });
 
-      // Update store state with the tick outputs
+      // 4. Validate tool traffic types and formats
+      currentNodes.forEach((node) => {
+        if (node.type === 'toolNode') {
+          const configType = node.data?.configType as string || '';
+          const expectedFormat = node.data?.expectedFormat as string || 'CEF';
+          
+          const isPacketTool = configType === 'Packet Tool';
+          const isMetadataTool = configType === 'Metadata Tool';
+          
+          const received = toolReceivedStreams[node.id] || [];
+          
+          let nextStatus: 'warning' | 'optimal' | undefined = undefined;
+          let nextStatusMessage = '';
+          let receivedFormat = '';
+
+          if (received.length > 0) {
+            for (const rStream of received) {
+              const rType = rStream.trafficType || 'packet';
+              const rFormat = rStream.metadataFormat;
+
+              if (isPacketTool) {
+                if (rType !== 'packet') {
+                  nextStatus = 'warning';
+                  nextStatusMessage = 'Expected packets, got metadata';
+                  break;
+                }
+              } else if (isMetadataTool) {
+                if (rType !== 'metadata') {
+                  nextStatus = 'warning';
+                  nextStatusMessage = 'Expected metadata, got packets';
+                  break;
+                } else if (expectedFormat !== 'Any' && rFormat !== expectedFormat) {
+                  nextStatus = 'warning';
+                  nextStatusMessage = `Format mismatch: got ${rFormat}, expected ${expectedFormat}`;
+                  break;
+                }
+                receivedFormat = rFormat || 'Metadata';
+              }
+            }
+            
+            if (!nextStatus) {
+              nextStatus = 'optimal';
+              nextStatusMessage = isPacketTool ? 'Receiving packet traffic' : `Receiving ${receivedFormat} metadata`;
+            }
+          } else {
+            nextStatus = undefined;
+            nextStatusMessage = 'No active traffic streams';
+          }
+
+          if (
+            node.data?.status !== nextStatus || 
+            node.data?.statusMessage !== nextStatusMessage ||
+            node.data?.receivedFormat !== receivedFormat
+          ) {
+            useStore.getState().updateNodeData(node.id, { 
+              status: nextStatus, 
+              statusMessage: nextStatusMessage,
+              receivedFormat: receivedFormat 
+            });
+          }
+        }
+      });
+
       updateSimulationTick(metrics, Array.from(activeEdgeSet), Array.from(blockedEdgeSet));
     };
 
-    // Run first step immediately
     runSimulationStep();
 
-    // Set interval for subsequent ticks
     const intervalTime = 800 / simulationSpeed;
     tickRef.current = window.setInterval(runSimulationStep, intervalTime);
 
@@ -309,7 +415,7 @@ const SimulationEngine: React.FC = () => {
         window.clearInterval(tickRef.current);
       }
     };
-  }, [isRunning, simulationSpeed, nodes, edges, trafficStreams, updateSimulationTick]);
+  }, [isRunning, simulationSpeed, updateSimulationTick]);
 
   return null;
 };

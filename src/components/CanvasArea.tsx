@@ -51,11 +51,20 @@ const CanvasArea: React.FC = () => {
         className = 'blocked-flow';
       }
     }
+
+    // Dynamic Edge Labeling for GigaSMART Application Metadata
+    let label = edge.label;
+    const srcNode = nodes.find((n) => n.id === edge.source);
+    if (srcNode?.type === 'gigaSmartNode' && srcNode.data?.actionType === 'Application Metadata') {
+      const format = (srcNode.data?.metadataFormat as string) || 'CEF';
+      label = `${format} Metadata`;
+    }
     
     return {
       ...edge,
       className,
       animated,
+      label,
     };
   });
 
@@ -75,18 +84,24 @@ const CanvasArea: React.FC = () => {
         return;
       }
 
-      const { type, label } = JSON.parse(rawData);
+      const { type, label, initialData } = JSON.parse(rawData);
 
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
 
+      const mergedData = { ...initialData };
+      if (initialData?.actionType === 'Deduplication' && mergedData.dedupRate === undefined) {
+        mergedData.dedupRate = Math.floor(Math.random() * 41) + 10; // random 10% to 50%
+        mergedData.lastDedupUpdate = Date.now();
+      }
+
       const newNode: Node = {
         id: uuidv4(),
         type,
         position,
-        data: { label: label, configType: label },
+        data: { label: label, configType: label, ...mergedData },
       };
 
       addNode(newNode);
