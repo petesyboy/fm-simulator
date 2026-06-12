@@ -10,15 +10,27 @@ import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/store';
 import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode, GroupNode } from './CustomNodes';
+import { NODE_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
 
+/**
+ * nodeTypes MUST be defined outside the component.
+ *
+ * If it were defined inside CanvasArea, a new object would be created on every
+ * render, causing ReactFlow to treat it as a brand-new type map each time and
+ * re-mount every node.  By placing it at module scope the reference is stable
+ * for the entire lifetime of the application.
+ *
+ * The keys here must match the `type` field used when adding nodes to the store.
+ * We use the NODE_TYPES constants to keep them in sync.
+ */
 const nodeTypes = {
-  inputNode: InputNode,
-  filterNode: FilterNode,
-  toolNode: ToolNode,
-  mapNode: MapNode,
-  gigaStreamNode: GigaStreamNode,
-  gigaSmartNode: GigaSmartNode,
-  groupNode: GroupNode,
+  [NODE_TYPES.INPUT]:      InputNode,
+  [NODE_TYPES.FILTER]:     FilterNode,
+  [NODE_TYPES.TOOL]:       ToolNode,
+  [NODE_TYPES.MAP]:        MapNode,
+  [NODE_TYPES.GIGASTREAM]: GigaStreamNode,
+  [NODE_TYPES.GIGASMART]:  GigaSmartNode,
+  [NODE_TYPES.GROUP]:      GroupNode,
 };
 
 const CanvasArea: React.FC = () => {
@@ -99,11 +111,12 @@ const CanvasArea: React.FC = () => {
       const mergedData = { ...initialData };
       let labelToUse = label;
 
-      if (type === 'inputNode') {
-        // Find next port index (max + 1)
+      if (type === NODE_TYPES.INPUT) {
+        // Auto-number new input ports by finding the highest existing index.
+        // This gives a friendly label like "SPAN Port 1/1/x3" automatically.
         let maxIndex = 0;
         nodes.forEach((node) => {
-          if (node.type === 'inputNode') {
+          if (node.type === NODE_TYPES.INPUT) {
             const labelStr = String(node.data?.label || '');
             const match = labelStr.match(/(?:x|Tunnel\s+)(\d+)/i);
             if (match) {
@@ -114,11 +127,11 @@ const CanvasArea: React.FC = () => {
         });
         const nextIdx = maxIndex + 1;
 
-        if (initialData?.configType === 'TAP') {
+        if (initialData?.configType === CONFIG_TYPES.TAP) {
           labelToUse = `TAP Device 1/1/x${nextIdx}`;
-        } else if (initialData?.configType === 'SPAN') {
+        } else if (initialData?.configType === CONFIG_TYPES.SPAN) {
           labelToUse = `SPAN Port 1/1/x${nextIdx}`;
-        } else if (initialData?.configType === 'ERSPAN') {
+        } else if (initialData?.configType === CONFIG_TYPES.ERSPAN) {
           labelToUse = `ERSPAN Tunnel ${nextIdx}`;
         }
       }
@@ -137,7 +150,9 @@ const CanvasArea: React.FC = () => {
 
       addNode(newNode);
 
-      if (type === 'inputNode') {
+      // Automatically generate a traffic stream whenever an input port is dropped.
+      // This gives immediate feedback that the port is "live" without needing manual setup.
+      if (type === NODE_TYPES.INPUT) {
         const speeds = [1, 10, 25, 40, 100];
         const randomGbps = speeds[Math.floor(Math.random() * speeds.length)];
         const randomMbps = randomGbps * 1000;

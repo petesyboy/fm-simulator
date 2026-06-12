@@ -13,6 +13,7 @@ import {
   type OnConnect,
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
+import { NODE_TYPES } from '../constants/nodeTypes';
 
 export interface TrafficStream {
   id: string;
@@ -69,7 +70,23 @@ export type RFState = {
   updateTrafficStream: (id: string, stream: Partial<TrafficStream>) => void;
   deleteTrafficStream: (id: string) => void;
   resetMetrics: () => void;
-  updateSimulationTick: (metrics: Record<string, NodeMetrics>, activeEdges: string[], blockedEdges: string[], deliveredStreams?: string[]) => void;
+  updateSimulationTick: (
+    metrics: Record<string, NodeMetrics>,
+    activeEdges: string[],
+    blockedEdges: string[],
+    deliveredStreams?: string[],
+    /**
+     * Per-node data patches: merged into each node's `data` object.
+     * Replaces individual updateNodeData() calls from SimulationEngine,
+     * which each triggered a separate Zustand set() and React re-render.
+     */
+    nodeDataPatches?: Record<string, Record<string, unknown>>,
+    /**
+     * Per-stream patches: merged into each TrafficStream.
+     * Replaces individual updateTrafficStream() calls from SimulationEngine.
+     */
+    streamPatches?: Record<string, Partial<TrafficStream>>,
+  ) => void;
   clearCanvas: () => void;
   loadDemo: () => void;
   groupSelectedNodes: () => void;
@@ -217,11 +234,12 @@ export const useStore = create<RFState>((set, get) => ({
     const deletedNodeIds = changes
       .filter((c) => c.type === 'remove')
       .map((c) => (c as { id: string }).id);
-      
+
     const deletedGroupNodeIds = deletedNodeIds.filter((id) => id.includes('group'));
-    
+
     if (deletedGroupNodeIds.length > 0) {
-      // Un-nest child nodes: remove parentId, restore absolute position
+      // When a group node is deleted, un-nest its children:
+      // remove their parentId and convert their relative position back to absolute.
       nextNodes = nextNodes.map((node) => {
         if (node.parentId && deletedGroupNodeIds.includes(node.parentId)) {
           const parentNode = get().nodes.find((n) => n.id === node.parentId);
@@ -242,6 +260,7 @@ export const useStore = create<RFState>((set, get) => ({
     }
 
     if (deletedNodeIds.length > 0) {
+      // Also remove any traffic streams whose source node was just deleted
       const nextTraffic = get().trafficStreams.filter(
         (s) => !deletedNodeIds.includes(s.sourceNodeId)
       );
@@ -333,12 +352,40 @@ export const useStore = create<RFState>((set, get) => ({
     set({ nodeMetrics: {}, activeEdges: [], blockedEdges: [], deliveredStreams: [] });
   },
 
-  updateSimulationTick: (metrics: Record<string, NodeMetrics>, activeEdges: string[], blockedEdges: string[], deliveredStreams?: string[]) => {
+  updateSimulationTick: (
+    metrics: Record<string, NodeMetrics>,
+    activeEdges: string[],
+    blockedEdges: string[],
+    deliveredStreams?: string[],
+    nodeDataPatches?: Record<string, Record<string, unknown>>,
+    streamPatches?: Record<string, Partial<TrafficStream>>,
+  ) => {
+    // Apply node-data patches (e.g. dedupRate drift, tool status)
+    let nextNodes = get().nodes;
+    if (nodeDataPatches && Object.keys(nodeDataPatches).length > 0) {
+      nextNodes = nextNodes.map((node) =>
+        nodeDataPatches[node.id]
+          ? { ...node, data: { ...node.data, ...nodeDataPatches[node.id] } }
+          : node
+      );
+    }
+
+    // Apply traffic stream patches (e.g. bandwidth drift)
+    let nextStreams = get().trafficStreams;
+    if (streamPatches && Object.keys(streamPatches).length > 0) {
+      nextStreams = nextStreams.map((s) =>
+        streamPatches[s.id] ? { ...s, ...streamPatches[s.id] } : s
+      );
+    }
+
+    // ONE Zustand set() call → ONE React re-render per tick
     set({
       nodeMetrics: metrics,
       activeEdges,
       blockedEdges,
       deliveredStreams: deliveredStreams || [],
+      nodes: nextNodes,
+      trafficStreams: nextStreams,
     });
   },
 
@@ -360,8 +407,9 @@ export const useStore = create<RFState>((set, get) => ({
   },
 
   groupSelectedNodes: () => {
+    // Only input port nodes can be grouped — they represent physical switch/tap ports
     const selectedNodes = get().nodes.filter(
-      (n) => n.selected && n.type === 'inputNode'
+      (n) => n.selected && n.type === NODE_TYPES.INPUT
     );
     if (selectedNodes.length < 2) return;
 
@@ -395,9 +443,9 @@ export const useStore = create<RFState>((set, get) => ({
       data: { label: 'Port Group', configType: 'Port Group' },
     };
 
-    // 3. Update child nodes to be nested
+    // Update child nodes to be nested inside the group
     const updatedNodes = get().nodes.map((node) => {
-      if (node.selected && node.type === 'inputNode') {
+      if (node.selected && node.type === NODE_TYPES.INPUT) {
         return {
           ...node,
           parentId: groupId,

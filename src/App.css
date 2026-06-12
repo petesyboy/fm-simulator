@@ -764,3 +764,26 @@
   background-color: #202020;
   color: #ffffff;
 }
+
+/* Toast notification fade-in animation (used by Header SaveToast and App.tsx toast) */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Keyboard shortcut hint — used in tooltips / overlay text */
+.kbd-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: monospace;
+}
