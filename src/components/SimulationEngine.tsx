@@ -243,9 +243,16 @@ const SimulationEngine: React.FC = () => {
         }
 
         let outboundEdges = currentEdges.filter((e) => e.source === node.id);
-        if (outboundEdges.length === 0 && node.parentId) {
-          outboundEdges = currentEdges.filter((e) => e.source === node.parentId);
+        if (node.parentId) {
+          const parentEdges = currentEdges.filter((e) => e.source === node.parentId);
+          outboundEdges = [...outboundEdges, ...parentEdges];
         }
+        const seenTargets = new Set<string>();
+        outboundEdges = outboundEdges.filter((edge) => {
+          if (seenTargets.has(edge.target)) return false;
+          seenTargets.add(edge.target);
+          return true;
+        });
 
         if (node.type === 'toolNode') {
           if (!toolReceivedStreams[node.id]) {
@@ -370,6 +377,9 @@ const SimulationEngine: React.FC = () => {
             });
             continue;
           }
+        }
+        else if (node.type === 'inputNode') {
+          // Do nothing - txBps was already updated at the top of the loop for source nodes
         }
         else {
           nodeMetric.txBps += item.stream.bandwidth;
