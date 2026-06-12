@@ -82,7 +82,8 @@ const defaultMapId = 'node-map-1';
 const defaultVlanFilterId = 'node-filter-1';
 const defaultPortFilterId = 'node-filter-2';
 const defaultToolHopId = 'node-tool-1';
-const defaultToolVectraId = 'node-tool-2';
+const defaultAmiId = 'node-gigasmart-ami-1';
+const defaultToolSplunkId = 'node-tool-splunk-1';
 
 const initialNodes: Node[] = [
   {
@@ -122,10 +123,16 @@ const initialNodes: Node[] = [
     data: { label: 'ExtraHop Tool', configType: 'ExtraHop' },
   },
   {
-    id: defaultToolVectraId,
+    id: defaultAmiId,
+    type: 'gigaSmartNode',
+    position: { x: 750, y: 260 },
+    data: { label: 'AMI Node', configType: 'AMI', actionType: 'AMI', metadataFormat: 'CEF' },
+  },
+  {
+    id: defaultToolSplunkId,
     type: 'toolNode',
-    position: { x: 800, y: 260 },
-    data: { label: 'Vectra AI Tool', configType: 'Vectra' },
+    position: { x: 950, y: 260 },
+    data: { label: 'Splunk Tool', configType: 'Metadata Tool', expectedFormat: 'CEF' },
   },
 ];
 
@@ -134,7 +141,8 @@ const initialEdges: Edge[] = [
   { id: 'e2', source: defaultMapId, target: defaultVlanFilterId, sourceHandle: 'out', targetHandle: 'in' },
   { id: 'e3', source: defaultMapId, target: defaultPortFilterId, sourceHandle: 'out', targetHandle: 'in' },
   { id: 'e4', source: defaultVlanFilterId, target: defaultToolHopId, sourceHandle: 'out', targetHandle: 'in' },
-  { id: 'e5', source: defaultPortFilterId, target: defaultToolVectraId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e5', source: defaultPortFilterId, target: defaultAmiId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e6', source: defaultAmiId, target: defaultToolSplunkId, sourceHandle: 'out', targetHandle: 'in' },
 ];
 
 const initialTraffic: TrafficStream[] = [

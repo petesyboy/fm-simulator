@@ -244,6 +244,7 @@ const Sidebar: React.FC = () => {
     { label: 'Load Balancing', type: 'gigaStreamNode', initial: { algorithm: 'Round Robin' } },
     { label: 'Masking', type: 'gigaSmartNode', initial: { actionType: 'Masking', configType: 'Masking' } },
     { label: 'AMX', type: 'gigaSmartNode', initial: { actionType: 'AMX', configType: 'AMX' } },
+    { label: 'AMI', type: 'gigaSmartNode', initial: { actionType: 'AMI', configType: 'AMI' } },
     { label: 'Pcapng', type: 'gigaSmartNode', initial: { actionType: 'Pcapng', configType: 'Pcapng' } },
     { label: '5G-SBI', type: 'gigaSmartNode', initial: { actionType: '5G-SBI', configType: '5G-SBI' } },
     { label: 'Sbipoe', type: 'gigaSmartNode', initial: { actionType: 'Sbipoe', configType: 'Sbipoe' } },
@@ -253,25 +254,6 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* 1. Leftmost Session Sidebar */}
-      <aside className="sidebar-sessions">
-        <button className="new-session-btn">
-          New Monitoring Session
-        </button>
-
-        <div className="sidebar-section-title">Monitoring Sessions</div>
-        
-        <div className="session-item active">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '14px', color: '#9e9e9e' }}>☁️</span>
-            <div>
-              <div className="session-name">Test</div>
-              <div className="session-status">Not Deployed | Healthy</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
       {/* 2. Inner Elements Tree Sidebar */}
       <aside className="sidebar-elements">
         <div className="elements-header">

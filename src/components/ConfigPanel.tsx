@@ -532,6 +532,7 @@ const ConfigPanel: React.FC = () => {
               <option value="Header Stripping">Header Stripping (VXLAN/MPLS)</option>
               <option value="Masking">Masking</option>
               <option value="AMX">AMX</option>
+              <option value="AMI">AMI</option>
               <option value="Pcapng">Pcapng</option>
               <option value="5G-SBI">5G-SBI</option>
               <option value="Sbipoe">Sbipoe</option>
