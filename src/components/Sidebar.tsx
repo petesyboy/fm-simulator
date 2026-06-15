@@ -15,7 +15,7 @@
 import React, { useState } from 'react';
 import {
   AppIcon, MapIcon, GreenCircleIcon,
-  SpanIcon, TapIcon, ErspanIcon,
+  SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
   PacketToolIcon, MetadataToolIcon,
 } from './Icons';
 import { NODE_TYPES, ACTION_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
@@ -25,7 +25,7 @@ import { NODE_TYPES, ACTION_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
 // can be removed.
 export {
   AppIcon, MapIcon, GreenCircleIcon,
-  SpanIcon, TapIcon, ErspanIcon,
+  SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
   PacketToolIcon, MetadataToolIcon,
 };
 
@@ -116,6 +116,14 @@ const Sidebar: React.FC = () => {
               <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'ERSPAN Tunnel 10', { configType: CONFIG_TYPES.ERSPAN })}>
                 <ErspanIcon size={18} />
                 <span>ERSPAN Source</span>
+              </div>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'East/West Traffic 1', { configType: CONFIG_TYPES.EAST_WEST })}>
+                <EastWestIcon size={18} />
+                <span>East/West Traffic</span>
+              </div>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'VMWare Estate 1', { configType: CONFIG_TYPES.VMWARE })}>
+                <VmwareIcon size={18} />
+                <span>VMWare Estate</span>
               </div>
 
               <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>PACKET CONSUMING TOOLS</div>

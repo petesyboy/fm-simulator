@@ -75,9 +75,11 @@ const ConfirmModal: React.FC<{
 interface HeaderProps {
   /** Called when the user clicks "Save Layout" — opens the save slot modal in App.tsx. */
   onSaveClick: () => void;
+  /** Called when the user clicks "Load Layout" — opens the load slot modal in App.tsx. */
+  onLoadClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSaveClick }) => {
+const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
   // Subscribe to exactly the state slices we need
   const isRunning      = useStore((state) => state.isRunning);
   const simulationSpeed = useStore((state) => state.simulationSpeed);
@@ -142,6 +144,9 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick }) => {
             {/* Save button now opens the multi-slot modal in App.tsx */}
             <button className="header-btn primary" onClick={onSaveClick}>
               💾 Save Layout
+            </button>
+            <button className="header-btn secondary" onClick={onLoadClick}>
+              📂 Load Layout
             </button>
             <button className="header-btn secondary" onClick={loadDemo}>
               🔄 Reset Demo

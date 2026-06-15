@@ -50,6 +50,7 @@ const getSavedSlots = (): string[] =>
     .sort();
 
 interface SaveSlotModalProps {
+  mode: 'save' | 'load';
   onClose: () => void;
   onSaved: (name: string) => void;
   onLoaded: () => void;
@@ -59,7 +60,7 @@ interface SaveSlotModalProps {
  * Modal for managing save slots.
  * Users can type a slot name to save to, or click "Load" on an existing slot.
  */
-const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ onClose, onSaved, onLoaded }) => {
+const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ mode, onClose, onSaved, onLoaded }) => {
   const [slotName, setSlotName] = useState('');
   const [slots, setSlots] = useState<string[]>(getSavedSlots);
   const nodes         = useStore((s) => s.nodes);
@@ -98,25 +99,29 @@ const SaveSlotModal: React.FC<SaveSlotModalProps> = ({ onClose, onSaved, onLoade
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
       <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '10px', padding: '24px', width: '380px', boxShadow: '0 12px 48px rgba(0,0,0,0.7)' }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#fff', fontWeight: 700 }}>💾 Save / Load Layout</h3>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#fff', fontWeight: 700 }}>
+          {mode === 'save' ? '💾 Save Layout' : '📂 Load Layout'}
+        </h3>
 
         {/* Save row */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          <input
-            type="text"
-            placeholder="Slot name (e.g. my-topology)"
-            value={slotName}
-            onChange={(e) => setSlotName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            style={{ flex: 1, padding: '7px 10px', background: '#121212', border: '1px solid #333', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
-          />
-          <button
-            onClick={handleSave}
-            style={{ padding: '7px 14px', background: 'var(--color-blue)', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-          >
-            Save
-          </button>
-        </div>
+        {mode === 'save' && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <input
+              type="text"
+              placeholder="Slot name (e.g. my-topology)"
+              value={slotName}
+              onChange={(e) => setSlotName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              style={{ flex: 1, padding: '7px 10px', background: '#121212', border: '1px solid #333', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+            />
+            <button
+              onClick={handleSave}
+              style={{ padding: '7px 14px', background: 'var(--color-blue)', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Save
+            </button>
+          </div>
+        )}
 
         {/* Existing slots */}
         {slots.length === 0 ? (
@@ -156,7 +161,7 @@ function App() {
   const restoreState     = useStore((state) => state.restoreState);
   const toggleSimulation = useStore((state) => state.toggleSimulation);
 
-  const [showSaveModal, setShowSaveModal]   = useState(false);
+  const [modalMode, setModalMode] = useState<'save' | 'load' | null>(null);
   const [saveToast, setSaveToast]           = useState('');
 
   // ── Auto-restore on first mount ──────────────────────────────────────────
@@ -187,7 +192,7 @@ function App() {
       if (isCtrl && e.key === 's') {
         // Ctrl/Cmd+S → open the save slot modal (same as clicking "💾 Save Layout")
         e.preventDefault();
-        setShowSaveModal(true);
+        setModalMode('save');
       }
 
       if (e.key === ' ' && !isCtrl) {
@@ -214,9 +219,10 @@ function App() {
       )}
 
       {/* Multi-slot save/load modal */}
-      {showSaveModal && (
+      {modalMode && (
         <SaveSlotModal
-          onClose={() => setShowSaveModal(false)}
+          mode={modalMode}
+          onClose={() => setModalMode(null)}
           onSaved={(name) => {
             setSaveToast(`Saved to "${name}"`);
             setTimeout(() => setSaveToast(''), 2000);
@@ -228,7 +234,10 @@ function App() {
         />
       )}
 
-      <Header onSaveClick={() => setShowSaveModal(true)} />
+      <Header
+        onSaveClick={() => setModalMode('save')}
+        onLoadClick={() => setModalMode('load')}
+      />
 
       <div className="main-content">
         <ReactFlowProvider>

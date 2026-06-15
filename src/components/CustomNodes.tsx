@@ -19,7 +19,7 @@ import { useStore, type MapCondition } from '../store/store';
 import { formatBandwidth } from '../utils/format';
 import {
   MapIcon, GreenCircleIcon, SmartIcon, AppIcon,
-  SpanIcon, TapIcon, ErspanIcon,
+  SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
   PacketToolIcon, MetadataToolIcon,
 } from './Icons';
 import { CONFIG_TYPES, ACTION_TYPES, isMetadataAction, isDedupAction } from '../constants/nodeTypes';
@@ -31,11 +31,13 @@ export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const metrics = useStore((state) => state.nodeMetrics[id]);
   const configType = (data.configType as string) || '';
 
-  /** Pick the correct icon based on the port class (SPAN / TAP / ERSPAN). */
+  /** Pick the correct icon based on the port class. */
   const renderIcon = () => {
     if (configType.startsWith(CONFIG_TYPES.SPAN)) return <SpanIcon size={20} />;
     if (configType.startsWith(CONFIG_TYPES.TAP)) return <TapIcon size={20} />;
     if (configType.startsWith(CONFIG_TYPES.ERSPAN)) return <ErspanIcon size={20} />;
+    if (configType.startsWith(CONFIG_TYPES.EAST_WEST)) return <EastWestIcon size={20} />;
+    if (configType.startsWith(CONFIG_TYPES.VMWARE)) return <VmwareIcon size={20} />;
     return <MapIcon size={20} />;
   };
 
@@ -45,6 +47,10 @@ export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     ? 'TAP Hardware Device'
     : configType.startsWith(CONFIG_TYPES.ERSPAN)
     ? 'ERSPAN Tunnel Input'
+    : configType.startsWith(CONFIG_TYPES.EAST_WEST)
+    ? 'East/West Traffic Source'
+    : configType.startsWith(CONFIG_TYPES.VMWARE)
+    ? 'VMWare Virtual Estate'
     : 'Network Input';
 
   return (

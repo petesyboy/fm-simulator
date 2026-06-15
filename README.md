@@ -79,3 +79,4 @@ Here is how to set up a basic flow map that routes mirror traffic through a Giga
    - The connection lines will light up with moving traffic animations.
    - The Vectra node will display a green status badge indicating it is successfully receiving raw packets.
    - In the bottom Traffic Generator drawer, the status column for your active traffic stream will update to a green `✓ Passed` badge, showing it has successfully arrived at its destination.
+

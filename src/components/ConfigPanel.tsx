@@ -223,6 +223,8 @@ const InputNodePanel: React.FC<{
           <option value={CONFIG_TYPES.SPAN}>SPAN Port</option>
           <option value={CONFIG_TYPES.TAP}>TAP Hardware Device</option>
           <option value={CONFIG_TYPES.ERSPAN}>ERSPAN Tunnel Source</option>
+          <option value={CONFIG_TYPES.EAST_WEST}>East/West Traffic Source</option>
+          <option value={CONFIG_TYPES.VMWARE}>VMWare Virtual Estate</option>
         </select>
       </FormGroup>
 
@@ -592,6 +594,7 @@ const ConfigPanel: React.FC = () => {
    */
   useEffect(() => {
     if (selectedNodeId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(false);
     }
   }, [selectedNodeId]);
@@ -624,11 +627,13 @@ const ConfigPanel: React.FC = () => {
     // When the user changes the configType of an inputNode, update the label to match
     if (key === 'configType' && selectedNode.type === NODE_TYPES.INPUT) {
       const oldLabel = String(selectedNode.data?.label || '');
-      const match    = oldLabel.match(/(?:x|Tunnel\s+)(\d+)/i);
+      const match    = oldLabel.match(/(?:x|Tunnel\s+|Traffic\s+|Estate\s+)(\d+)/i);
       const portIdx  = match ? match[1] : '1';
       if (val === CONFIG_TYPES.TAP)    updates.label = `TAP Device 1/1/x${portIdx}`;
       else if (val === CONFIG_TYPES.SPAN)   updates.label = `SPAN Port 1/1/x${portIdx}`;
       else if (val === CONFIG_TYPES.ERSPAN) updates.label = `ERSPAN Tunnel ${portIdx}`;
+      else if (val === CONFIG_TYPES.EAST_WEST) updates.label = `East/West Traffic ${portIdx}`;
+      else if (val === CONFIG_TYPES.VMWARE) updates.label = `VMWare Estate ${portIdx}`;
     }
 
     updateNodeData(selectedNodeId, updates);

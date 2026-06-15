@@ -239,6 +239,22 @@ export const ErspanIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   </svg>
 );
 
+/** Teal circle with opposite horizontal arrows — East/West traffic. */
+export const EastWestIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <circle cx="12" cy="12" r="11" fill="#00acc1" stroke="#00838f" strokeWidth="1.5" />
+    <path d="M6 10h12M10 6.5L6.5 10l3.5 3.5M18 14H6M14 10.5l3.5 3.5-3.5 3.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+/** Blue circle with stacked isometric virtual hypervisor layers — VMWare estate. */
+export const VmwareIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <circle cx="12" cy="12" r="11" fill="#1e88e5" stroke="#0d47a1" strokeWidth="1.5" />
+    <path d="M6 8l6-3 6 3-6 3-6-3zm0 4l6 3 6-3m-12 4l6 3 6-3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 // ─── Tool icons ───────────────────────────────────────────────────────────────
 
 /** Dark green shield — packet-consuming security tool. */

@@ -95,6 +95,12 @@ export type RFState = {
 
 // Create a default topology
 const defaultInputId = 'node-input-1';
+const tapInputId2 = 'node-input-tap-2';
+const tapInputId3 = 'node-input-tap-3';
+const tapInputId4 = 'node-input-tap-4';
+const tapInputId5 = 'node-input-tap-5';
+const tapInputId6 = 'node-input-tap-6';
+
 const defaultMapId = 'node-map-1';
 const defaultVlanFilterId = 'node-filter-1';
 const defaultPortFilterId = 'node-filter-2';
@@ -106,13 +112,43 @@ const initialNodes: Node[] = [
   {
     id: defaultInputId,
     type: 'inputNode',
-    position: { x: 80, y: 180 },
+    position: { x: 50, y: 60 },
     data: { label: 'SPAN Port 1/1/x1', configType: 'SPAN Port' },
+  },
+  {
+    id: tapInputId2,
+    type: 'inputNode',
+    position: { x: 50, y: 140 },
+    data: { label: 'TAP Device 1/1/x2', configType: 'TAP Device' },
+  },
+  {
+    id: tapInputId3,
+    type: 'inputNode',
+    position: { x: 50, y: 220 },
+    data: { label: 'TAP Device 1/1/x3', configType: 'TAP Device' },
+  },
+  {
+    id: tapInputId4,
+    type: 'inputNode',
+    position: { x: 50, y: 300 },
+    data: { label: 'TAP Device 1/1/x4', configType: 'TAP Device' },
+  },
+  {
+    id: tapInputId5,
+    type: 'inputNode',
+    position: { x: 50, y: 380 },
+    data: { label: 'TAP Device 1/1/x5', configType: 'TAP Device' },
+  },
+  {
+    id: tapInputId6,
+    type: 'inputNode',
+    position: { x: 50, y: 460 },
+    data: { label: 'TAP Device 1/1/x6', configType: 'TAP Device' },
   },
   {
     id: defaultMapId,
     type: 'mapNode',
-    position: { x: 300, y: 180 },
+    position: { x: 320, y: 260 },
     data: { 
       label: 'Core Traffic Map', 
       configType: 'Traffic Map',
@@ -124,37 +160,42 @@ const initialNodes: Node[] = [
   {
     id: defaultVlanFilterId,
     type: 'filterNode',
-    position: { x: 550, y: 100 },
+    position: { x: 620, y: 180 },
     data: { label: 'VLAN 100 Filter', configType: 'VLAN Filter', vlanIds: '100' },
   },
   {
     id: defaultPortFilterId,
     type: 'filterNode',
-    position: { x: 550, y: 260 },
+    position: { x: 620, y: 340 },
     data: { label: 'Port 80 Filter', configType: 'Port Filter', ports: '80' },
   },
   {
     id: defaultToolHopId,
     type: 'toolNode',
-    position: { x: 800, y: 100 },
+    position: { x: 890, y: 180 },
     data: { label: 'ExtraHop Tool', configType: 'ExtraHop' },
   },
   {
     id: defaultAmiId,
     type: 'gigaSmartNode',
-    position: { x: 750, y: 260 },
+    position: { x: 890, y: 340 },
     data: { label: 'AMI Node', configType: 'AMI', actionType: 'AMI', metadataFormat: 'CEF' },
   },
   {
     id: defaultToolSplunkId,
     type: 'toolNode',
-    position: { x: 950, y: 260 },
+    position: { x: 1160, y: 340 },
     data: { label: 'Splunk Tool', configType: 'Metadata Tool', expectedFormat: 'CEF' },
   },
 ];
 
 const initialEdges: Edge[] = [
   { id: 'e1', source: defaultInputId, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e-tap-2', source: tapInputId2, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e-tap-3', source: tapInputId3, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e-tap-4', source: tapInputId4, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e-tap-5', source: tapInputId5, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
+  { id: 'e-tap-6', source: tapInputId6, target: defaultMapId, sourceHandle: 'out', targetHandle: 'in' },
   { id: 'e2', source: defaultMapId, target: defaultVlanFilterId, sourceHandle: 'out', targetHandle: 'in' },
   { id: 'e3', source: defaultMapId, target: defaultPortFilterId, sourceHandle: 'out', targetHandle: 'in' },
   { id: 'e4', source: defaultVlanFilterId, target: defaultToolHopId, sourceHandle: 'out', targetHandle: 'in' },
@@ -213,6 +254,71 @@ const initialTraffic: TrafficStream[] = [
     portDst: '8080',
     protocol: 'tcp',
     bandwidth: 10000, // 10 Gbps
+    active: true,
+  },
+  {
+    id: 't-tap-2',
+    name: 'TAP 2 Flow (10 Gbps)',
+    sourceNodeId: tapInputId2,
+    vlan: '100',
+    ipSrc: '192.168.10.2',
+    ipDst: '10.0.0.20',
+    portSrc: '50002',
+    portDst: '80',
+    protocol: 'tcp',
+    bandwidth: 10000,
+    active: true,
+  },
+  {
+    id: 't-tap-3',
+    name: 'TAP 3 Flow (10 Gbps)',
+    sourceNodeId: tapInputId3,
+    vlan: '200',
+    ipSrc: '192.168.10.3',
+    ipDst: '10.0.0.30',
+    portSrc: '50003',
+    portDst: '80',
+    protocol: 'tcp',
+    bandwidth: 10000,
+    active: true,
+  },
+  {
+    id: 't-tap-4',
+    name: 'TAP 4 Flow (1 Gbps)',
+    sourceNodeId: tapInputId4,
+    vlan: '100',
+    ipSrc: '192.168.10.4',
+    ipDst: '10.0.0.40',
+    portSrc: '50004',
+    portDst: '80',
+    protocol: 'tcp',
+    bandwidth: 1000,
+    active: true,
+  },
+  {
+    id: 't-tap-5',
+    name: 'TAP 5 Flow (25 Gbps)',
+    sourceNodeId: tapInputId5,
+    vlan: '100',
+    ipSrc: '192.168.10.5',
+    ipDst: '10.0.0.50',
+    portSrc: '50005',
+    portDst: '80',
+    protocol: 'tcp',
+    bandwidth: 25000,
+    active: true,
+  },
+  {
+    id: 't-tap-6',
+    name: 'TAP 6 Flow (40 Gbps)',
+    sourceNodeId: tapInputId6,
+    vlan: '100',
+    ipSrc: '192.168.10.6',
+    ipDst: '10.0.0.60',
+    portSrc: '50006',
+    portDst: '80',
+    protocol: 'tcp',
+    bandwidth: 40000,
     active: true,
   }
 ];

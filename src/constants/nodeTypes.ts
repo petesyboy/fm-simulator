@@ -63,6 +63,8 @@ export const CONFIG_TYPES = {
   SPAN:   'SPAN',
   TAP:    'TAP',
   ERSPAN: 'ERSPAN',
+  EAST_WEST: 'East/West',
+  VMWARE: 'VMWare',
 
   // Filter node sub-types
   VLAN_FILTER:   'VLAN Filter',

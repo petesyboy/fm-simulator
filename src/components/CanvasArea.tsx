@@ -133,6 +133,10 @@ const CanvasArea: React.FC = () => {
           labelToUse = `SPAN Port 1/1/x${nextIdx}`;
         } else if (initialData?.configType === CONFIG_TYPES.ERSPAN) {
           labelToUse = `ERSPAN Tunnel ${nextIdx}`;
+        } else if (initialData?.configType === CONFIG_TYPES.EAST_WEST) {
+          labelToUse = `East/West Traffic ${nextIdx}`;
+        } else if (initialData?.configType === CONFIG_TYPES.VMWARE) {
+          labelToUse = `VMWare Estate ${nextIdx}`;
         }
       }
 
