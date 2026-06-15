@@ -1,6 +1,6 @@
 # Gigamon Fabric Manager & Flow Map Simulator
 
-Welcome to the **Gigamon Fabric Manager & Flow Map Simulator**, an interactive visual orchestration tool built with React, TypeScript, React Flow, and Zustand. This application models a physical Gigamon H-Series Fabric Manager deployment, letting users visually configure network visibility pipelines, simulate real-time traffic throughput, generate CLI configuration scripts, and inspect flow validation rules.
+Welcome to the **Gigamon Fabric Manager & Flow Map Simulator**, an interactive visual orchestration tool built with React, TypeScript, React Flow, and Zustand. This application models a physical Gigamon H-Series Fabric Manager deployment, letting users visually configure network visibility pipelines, simulate real-time traffic throughput, and inspect flow validation rules.
 
 ---
 
@@ -11,9 +11,8 @@ Welcome to the **Gigamon Fabric Manager & Flow Map Simulator**, an interactive v
 3. **Live GigaSMART Deduplication Drift**: Deduplication nodes on the canvas dynamically drift their duplicate drop rate between `10%` and `50%` in real time, rendering the current rate directly onto the canvas node icon.
 4. **Flow Validation & Warnings**: Validates traffic paths dynamically. E.g., alerts are flagged if a Packet Tool (like Vectra) receives metadata instead of raw packets, or if a SIEM tool (like Splunk) receives format mismatches.
 5. **Port Grouping**: Group multiple traffic sources together inside a Port Group node. Connecting the group container to a Traffic Map aggregates all nested source interfaces.
-6. **H-Series CLI Script Compiler**: Generates exact Gigamon H-Series CLI script files in real time as you configure maps, filters, and port destinations.
-7. **Real-time Status Drawer**: Tracks and badges each traffic stream as `✓ Passed`, `❌ Filtered`, or `Idle` based on active path deliveries.
-8. **Collapsible Config Panel**: Slide the properties panel off the screen to make more room on the canvas, with intelligent auto-expansion when a node is selected.
+6. **Real-time Status Drawer**: Tracks and badges each traffic stream as `✓ Passed`, `❌ Filtered`, or `Idle` based on active path deliveries.
+7. **Collapsible Config Panel**: Slide the properties panel off the screen to make more room on the canvas, with intelligent auto-expansion when a node is selected.
 
 ---
 
