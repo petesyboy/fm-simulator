@@ -57,6 +57,7 @@ export type RFState = {
   activeEdges: string[];
   blockedEdges: string[];
   deliveredStreams: string[];
+  fitViewTrigger: number;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -334,6 +335,7 @@ export const useStore = create<RFState>((set, get) => ({
   activeEdges: [],
   blockedEdges: [],
   deliveredStreams: [],
+  fitViewTrigger: 0,
   
   onNodesChange: (changes: NodeChange[]) => {
     let nextNodes = applyNodeChanges(changes, get().nodes);
@@ -408,7 +410,8 @@ export const useStore = create<RFState>((set, get) => ({
     set({
       nodes,
       edges,
-      trafficStreams: trafficStreams || get().trafficStreams
+      trafficStreams: trafficStreams || get().trafficStreams,
+      fitViewTrigger: get().fitViewTrigger + 1
     });
   },
   
@@ -509,6 +512,7 @@ export const useStore = create<RFState>((set, get) => ({
       blockedEdges: [],
       trafficStreams: initialTraffic,
       deliveredStreams: [],
+      fitViewTrigger: get().fitViewTrigger + 1
     });
   },
 

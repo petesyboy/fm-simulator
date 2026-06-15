@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import {
   ReactFlow,
   useReactFlow,
@@ -47,7 +47,16 @@ const CanvasArea: React.FC = () => {
   const addNode = useStore((state) => state.addNode);
   const addTrafficStream = useStore((state) => state.addTrafficStream);
   const setSelectedNodeId = useStore((state) => state.setSelectedNodeId);
-  const { screenToFlowPosition } = useReactFlow();
+  const fitViewTrigger = useStore((state) => state.fitViewTrigger);
+  const { screenToFlowPosition, fitView } = useReactFlow();
+
+  useEffect(() => {
+    // Wait for nodes to render and layout boundaries to compute
+    const timer = setTimeout(() => {
+      fitView({ padding: 0.1 });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [fitViewTrigger, fitView]);
 
   // Dynamically apply classes and animation flags to connections
   const styledEdges = edges.map((edge) => {
