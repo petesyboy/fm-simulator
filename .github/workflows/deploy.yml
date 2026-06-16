@@ -3,7 +3,9 @@ name: Deploy to GitHub Pages
 on:
     push:
         branches:
-            - main # Set this to your default branch name (main or master)
+            - main
+            - refactor/code-quality-improvements
+    workflow_dispatch:
 
 permissions:
     contents: read

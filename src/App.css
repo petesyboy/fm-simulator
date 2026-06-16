@@ -423,6 +423,13 @@
   transition: stroke 0.3s, filter 0.3s;
 }
 
+/* Selected edge styling override */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--color-orange) !important;
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 0 6px rgba(255, 145, 0, 0.8)) !important;
+}
+
 /* Active flowing traffic edge styling */
 .react-flow__edge.active-flow .react-flow__edge-path {
   stroke: #00e5ff !important;
