@@ -562,8 +562,16 @@
   border-radius: 50% !important;
 }
 
+.react-flow__handle-left {
+  left: -5px !important;
+}
+
+.react-flow__handle-right {
+  right: -5px !important;
+}
+
 .react-flow__handle:hover {
-  transform: scale(1.4);
+  transform: translateY(-50%) scale(1.4) !important;
   border-color: var(--color-blue) !important;
 }
 
