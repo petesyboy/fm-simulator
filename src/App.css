@@ -454,6 +454,23 @@
   }
 }
 
+/* Reverse flowing edge styling for "pull" semantics */
+.react-flow__edge.reverse-flow .react-flow__edge-path {
+  stroke: #00e5ff !important;
+  stroke-dasharray: 4 3 !important;
+  filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.7)) !important;
+  animation: edge-flow-dash-reverse 1.2s linear infinite;
+}
+
+@keyframes edge-flow-dash-reverse {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 14;
+  }
+}
+
 
 /* 4. Canvas Node Styles (Charcoal Boxes) */
 .custom-node {

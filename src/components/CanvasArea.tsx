@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useCallback, useRef, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
   useReactFlow,
@@ -48,13 +48,14 @@ import type { Edge } from '@xyflow/react';
 interface FederatedEnclosuresProps {
   nodes: Node[];
   edges: Edge[];
+  onShowDashboard: () => void;
 }
 
 const NODE_EST_WIDTH = 180;
 const NODE_EST_HEIGHT = 90;
 const ENCLOSURE_PAD = 28;
 
-const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges }) => {
+const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges, onShowDashboard }) => {
   const { x: vpX, y: vpY, zoom } = useViewport();
 
   /** Group all S3 nodes connected to the same Splunk node. */
@@ -135,6 +136,28 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges 
             <div className="federated-enclosure-label">
               🔍 Federated Search
             </div>
+            <button 
+              onClick={onShowDashboard}
+              style={{
+                position: 'absolute',
+                top: '-12px',
+                right: '10px',
+                background: 'rgba(22, 22, 22, 0.95)',
+                border: '1px solid rgba(0, 229, 255, 0.4)',
+                borderRadius: '8px',
+                padding: '4px 8px',
+                fontSize: '10px',
+                color: '#00e5ff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                pointerEvents: 'auto',
+                boxShadow: '0 0 10px rgba(0, 229, 255, 0.2)'
+              }}
+            >
+              📊 Insights
+            </button>
           </div>
         );
       })}
@@ -144,6 +167,7 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges 
 
 const CanvasArea: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const [showDashboard, setShowDashboard] = useState(false);
   const nodes = useStore((state) => state.nodes);
   const edges = useStore((state) => state.edges);
   const activeEdges = useStore((state) => state.activeEdges);
@@ -187,12 +211,30 @@ const CanvasArea: React.FC = () => {
     // Dynamic Edge Labeling for GigaSMART Application Metadata
     let label = edge.label;
     const srcNode = nodes.find((n) => n.id === edge.source);
+    const targetNode = nodes.find((n) => n.id === edge.target);
+    
     if (srcNode?.type === 'gigaSmartNode' && 
         (srcNode.data?.actionType === 'Application Metadata' || 
          srcNode.data?.actionType === 'AMX' || 
          srcNode.data?.actionType === 'AMI')) {
       const format = (srcNode.data?.metadataFormat as string) || 'CEF';
       label = `${format} Metadata`;
+    }
+
+    // Always animate Federated Search (Splunk <-> S3) links to show "pull" capability
+    const srcTool = (srcNode?.data?.toolName as string) || '';
+    const tgtTool = (targetNode?.data?.toolName as string) || '';
+    const srcConfig = (srcNode?.data?.configType as string) || '';
+    const tgtConfig = (targetNode?.data?.configType as string) || '';
+
+    if (srcTool === 'Splunk' && tgtConfig === 'Storage Tool') {
+      // Flow from target (S3) back to source (Splunk)
+      className = 'reverse-flow';
+      animated = true;
+    } else if (srcConfig === 'Storage Tool' && tgtTool === 'Splunk') {
+      // Flow from source (S3) to target (Splunk)
+      className = 'active-flow';
+      animated = true;
     }
     
     return {
@@ -356,7 +398,7 @@ const CanvasArea: React.FC = () => {
       {/* When a Splunk tool is linked to an S3 / Object Storage tool, draw
           a dashed enclosure around both nodes to show they form a logical
           "Federated Search" entity across traditional ingest and object storage. */}
-      <FederatedEnclosures nodes={nodes} edges={edges} />
+      <FederatedEnclosures nodes={nodes} edges={edges} onShowDashboard={() => setShowDashboard(true)} />
 
       {showGroupingBanner && (
         <div style={{
@@ -487,8 +529,76 @@ const CanvasArea: React.FC = () => {
             }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            🗑️ Delete
+            🗑️ Remove Link{selectedEdges.length > 1 ? 's' : ''}
           </button>
+        </div>
+      )}
+
+      {/* ── Dashboard Modal ── */}
+      {showDashboard && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10000,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <div style={{
+            background: '#121212',
+            border: '1px solid #333',
+            borderRadius: '16px',
+            width: '90%',
+            height: '90%',
+            maxWidth: '1200px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 0 40px rgba(0,0,0,0.8)'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 24px',
+              borderBottom: '1px solid #333',
+              background: 'rgba(255,255,255,0.03)'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '16px', color: '#00e5ff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📊 Federated Network Insights
+              </h2>
+              <button 
+                onClick={() => setShowDashboard(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  fontSize: '24px',
+                  lineHeight: '1',
+                  padding: '4px'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+            <div style={{ flex: 1, padding: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0a0a0a' }}>
+              <img 
+                src="/dashboard-mock.png" 
+                alt="Network Insights Dashboard" 
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%', 
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  border: '1px solid #222',
+                  boxShadow: '0 4px 20px rgba(0, 229, 255, 0.1)'
+                }} 
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
