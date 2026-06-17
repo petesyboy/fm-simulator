@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/store';
 import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode, GroupNode } from './CustomNodes';
 import { NODE_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
-import dashboardImg from '../assets/dashboard-mock.png';
+import dashboardImg from '../assets/dashboard-mock.webp';
 
 /**
  * nodeTypes MUST be defined outside the component.
