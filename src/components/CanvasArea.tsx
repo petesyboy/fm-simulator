@@ -88,11 +88,15 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges 
   return (
     <>
       {pairs.map(({ splunkNode, s3Node }, i) => {
-        // Compute bounding box around both nodes in flow coordinates
-        const x1 = Math.min(splunkNode.position.x, s3Node.position.x);
-        const y1 = Math.min(splunkNode.position.y, s3Node.position.y);
-        const x2 = Math.max(splunkNode.position.x + NODE_EST_WIDTH, s3Node.position.x + NODE_EST_WIDTH);
-        const y2 = Math.max(splunkNode.position.y + NODE_EST_HEIGHT, s3Node.position.y + NODE_EST_HEIGHT);
+        // Compute bounding box around both nodes in flow coordinates.
+        // nodeOrigin is [0.5, 0.5] so position is the CENTER of each node.
+        const halfW = NODE_EST_WIDTH / 2;
+        const halfH = NODE_EST_HEIGHT / 2;
+
+        const x1 = Math.min(splunkNode.position.x - halfW, s3Node.position.x - halfW);
+        const y1 = Math.min(splunkNode.position.y - halfH, s3Node.position.y - halfH);
+        const x2 = Math.max(splunkNode.position.x + halfW, s3Node.position.x + halfW);
+        const y2 = Math.max(splunkNode.position.y + halfH, s3Node.position.y + halfH);
 
         // Add padding around the enclosure
         const left   = (x1 - ENCLOSURE_PAD) * zoom + vpX;
