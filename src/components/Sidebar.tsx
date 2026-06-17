@@ -101,7 +101,7 @@ const Sidebar: React.FC = () => {
           </div>
 
           {openSections.demo && (
-            <div className="tree-content" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+            <div className="tree-content" style={{ maxHeight: '600px', overflowY: 'auto' }}>
               <div className="demo-group-label" style={{ padding: '6px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>SOURCES</div>
 
               {/* Input port types — dragging these creates an inputNode */}
@@ -220,7 +220,7 @@ const Sidebar: React.FC = () => {
             <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>🔍</span>
           </div>
           {openSections.apps && (
-            <div className="tree-content" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            <div className="tree-content" style={{ maxHeight: '550px', overflowY: 'auto' }}>
               {appsList.map((app) => (
                 <div
                   key={app.label}

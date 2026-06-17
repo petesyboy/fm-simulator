@@ -57,9 +57,10 @@ const ENCLOSURE_PAD = 28;
 const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges }) => {
   const { x: vpX, y: vpY, zoom } = useViewport();
 
-  /** Find all Splunk↔S3 pairs connected by an edge. */
-  const pairs = useMemo(() => {
-    const result: { splunkNode: Node; s3Node: Node }[] = [];
+  /** Group all S3 nodes connected to the same Splunk node. */
+  const groups = useMemo(() => {
+    // Map of Splunk node ID to the group of nodes (Splunk + all its S3s)
+    const splunkGroups = new Map<string, Node[]>();
 
     for (const edge of edges) {
       const sourceNode = nodes.find((n) => n.id === edge.source);
@@ -71,42 +72,61 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges 
       const srcConfig = (sourceNode.data?.configType as string) || '';
       const tgtConfig = (targetNode.data?.configType as string) || '';
 
-      const isSplunkToS3 = srcTool === 'Splunk' && tgtConfig === 'Storage Tool';
-      const isS3ToSplunk = srcConfig === 'Storage Tool' && tgtTool === 'Splunk';
+      let splunkNode: Node | null = null;
+      let s3Node: Node | null = null;
 
-      if (isSplunkToS3) {
-        result.push({ splunkNode: sourceNode, s3Node: targetNode });
-      } else if (isS3ToSplunk) {
-        result.push({ splunkNode: targetNode, s3Node: sourceNode });
+      if (srcTool === 'Splunk' && tgtConfig === 'Storage Tool') {
+        splunkNode = sourceNode;
+        s3Node = targetNode;
+      } else if (srcConfig === 'Storage Tool' && tgtTool === 'Splunk') {
+        splunkNode = targetNode;
+        s3Node = sourceNode;
+      }
+
+      if (splunkNode && s3Node) {
+        if (!splunkGroups.has(splunkNode.id)) {
+          splunkGroups.set(splunkNode.id, [splunkNode]);
+        }
+        const groupNodes = splunkGroups.get(splunkNode.id)!;
+        if (!groupNodes.some(n => n.id === s3Node!.id)) {
+          groupNodes.push(s3Node);
+        }
       }
     }
-    return result;
+    return Array.from(splunkGroups.values());
   }, [nodes, edges]);
 
-  if (pairs.length === 0) return null;
+  if (groups.length === 0) return null;
 
   return (
     <>
-      {pairs.map(({ splunkNode, s3Node }, i) => {
-        // Compute bounding box around both nodes in flow coordinates.
+      {groups.map((groupNodes) => {
+        // Compute bounding box around all nodes in this group.
         // nodeOrigin is [0.5, 0.5] so position is the CENTER of each node.
         const halfW = NODE_EST_WIDTH / 2;
         const halfH = NODE_EST_HEIGHT / 2;
 
-        const x1 = Math.min(splunkNode.position.x - halfW, s3Node.position.x - halfW);
-        const y1 = Math.min(splunkNode.position.y - halfH, s3Node.position.y - halfH);
-        const x2 = Math.max(splunkNode.position.x + halfW, s3Node.position.x + halfW);
-        const y2 = Math.max(splunkNode.position.y + halfH, s3Node.position.y + halfH);
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+
+        for (const n of groupNodes) {
+          minX = Math.min(minX, n.position.x - halfW);
+          minY = Math.min(minY, n.position.y - halfH);
+          maxX = Math.max(maxX, n.position.x + halfW);
+          maxY = Math.max(maxY, n.position.y + halfH);
+        }
 
         // Add padding around the enclosure
-        const left   = (x1 - ENCLOSURE_PAD) * zoom + vpX;
-        const top    = (y1 - ENCLOSURE_PAD) * zoom + vpY;
-        const width  = (x2 - x1 + ENCLOSURE_PAD * 2) * zoom;
-        const height = (y2 - y1 + ENCLOSURE_PAD * 2) * zoom;
+        const left   = (minX - ENCLOSURE_PAD) * zoom + vpX;
+        const top    = (minY - ENCLOSURE_PAD) * zoom + vpY;
+        const width  = (maxX - minX + ENCLOSURE_PAD * 2) * zoom;
+        const height = (maxY - minY + ENCLOSURE_PAD * 2) * zoom;
+
+        const splunkId = groupNodes[0].id; // The Splunk node is always the first one
 
         return (
           <div
-            key={`federated-${splunkNode.id}-${s3Node.id}-${i}`}
+            key={`federated-${splunkId}`}
             className="federated-enclosure pulse"
             style={{ left, top, width, height }}
           >
