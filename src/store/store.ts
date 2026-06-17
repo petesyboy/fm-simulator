@@ -353,12 +353,18 @@ export const useStore = create<RFState>((set, get) => ({
           const parentNode = get().nodes.find((n) => n.id === node.parentId);
           const parentX = parentNode?.position.x || 0;
           const parentY = parentNode?.position.y || 0;
+          const parentWidth = (parentNode?.width as number) || (parentNode?.style?.width as number) || 0;
+          const parentHeight = (parentNode?.height as number) || (parentNode?.style?.height as number) || 0;
+          
+          const parentTopLeftX = parentX - parentWidth / 2;
+          const parentTopLeftY = parentY - parentHeight / 2;
+
           return {
             ...node,
             parentId: undefined,
             position: {
-              x: node.position.x + parentX,
-              y: node.position.y + parentY,
+              x: node.position.x + parentTopLeftX,
+              y: node.position.y + parentTopLeftY,
             },
             extent: undefined,
           };
@@ -581,6 +587,11 @@ export const useStore = create<RFState>((set, get) => ({
 
     const parentX = parentNode.position.x;
     const parentY = parentNode.position.y;
+    const parentWidth = (parentNode.width as number) || (parentNode.style?.width as number) || 0;
+    const parentHeight = (parentNode.height as number) || (parentNode.style?.height as number) || 0;
+    
+    const parentTopLeftX = parentX - parentWidth / 2;
+    const parentTopLeftY = parentY - parentHeight / 2;
 
     // 1. Un-nest child nodes: remove parentId, restore absolute position
     let updatedNodes = get().nodes.map((node) => {
@@ -589,8 +600,8 @@ export const useStore = create<RFState>((set, get) => ({
           ...node,
           parentId: undefined,
           position: {
-            x: node.position.x + parentX,
-            y: node.position.y + parentY,
+            x: node.position.x + parentTopLeftX,
+            y: node.position.y + parentTopLeftY,
           },
           extent: undefined,
         };
