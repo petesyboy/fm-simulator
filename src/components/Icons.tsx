@@ -277,12 +277,19 @@ export const MetadataToolIcon: React.FC<{ size?: number }> = ({ size = 20 }) => 
 
 // ─── Storage tool icon ────────────────────────────────────────────────────────
 
-/** Teal square with a cylinder/bucket — S3 / Object Storage tool. */
+/** Teal square with a cluster of cylinders — S3 / Object Storage tool (implies massive storage). */
 export const S3StorageIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
     <rect width="24" height="24" rx="4" fill="#00695c" stroke="#004d40" strokeWidth="1"/>
-    <ellipse cx="12" cy="8" rx="5" ry="2" stroke="white" strokeWidth="1.3" fill="none"/>
-    <path d="M7 8v8c0 1.1 2.24 2 5 2s5-.9 5-2V8" stroke="white" strokeWidth="1.3"/>
-    <ellipse cx="12" cy="12" rx="5" ry="1.5" stroke="white" strokeWidth="0.8" strokeDasharray="2 1.5" fill="none"/>
+    {/* Rear Left Cylinder */}
+    <ellipse cx="9" cy="9.5" rx="3" ry="1" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="1" fill="none"/>
+    <path d="M6 9.5v4c0 .6 1.3 1 3 1s3-.4 3-1v-4" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="1"/>
+    {/* Rear Right Cylinder */}
+    <ellipse cx="15" cy="9.5" rx="3" ry="1" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="1" fill="none"/>
+    <path d="M12 9.5v4c0 .6 1.3 1 3 1s3-.4 3-1v-4" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="1"/>
+    {/* Front Center Cylinder */}
+    <ellipse cx="12" cy="13" rx="4" ry="1.3" stroke="white" strokeWidth="1.2" fill="#00695c"/>
+    <path d="M8 13v4.5c0 .7 1.8 1.3 4 1.3s4-.6 4-1.3V13" stroke="white" strokeWidth="1.2"/>
+    <ellipse cx="12" cy="15.5" rx="4" ry="1" stroke="white" strokeWidth="0.7" strokeDasharray="2 1.5" fill="none"/>
   </svg>
 );

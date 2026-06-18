@@ -61,6 +61,7 @@ export interface BaseNodeData {
   statusMessage?: string;
   receivedFormat?: string;
   totalIngestedBytes?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any; // Add index signature
 }
 
