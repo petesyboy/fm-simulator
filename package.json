@@ -1,5 +1,5 @@
 {
-  "name": "fm-simulator",
+  "name": "traffic-simulator",
   "private": true,
   "version": "0.0.0",
   "type": "module",
