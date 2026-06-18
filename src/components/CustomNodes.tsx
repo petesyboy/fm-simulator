@@ -16,7 +16,7 @@
 import React from 'react';
 import { Handle, Position, NodeResizer, type NodeProps } from '@xyflow/react';
 import { useStore, type MapCondition } from '../store/store';
-import { formatBandwidth, formatPackets } from '../utils/format';
+import { formatBandwidth, formatPackets, formatBytes } from '../utils/format';
 import {
   MapIcon, GreenCircleIcon, SmartIcon, AppIcon,
   SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
@@ -181,6 +181,7 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isPacketTool = configType === CONFIG_TYPES.PACKET_TOOL;
   const isMetadataTool = configType === CONFIG_TYPES.METADATA_TOOL;
   const isStorageTool = configType === CONFIG_TYPES.STORAGE_TOOL;
+  const isFederatedSearch = data.label === 'Splunk Federated Search';
 
   // Splunk and S3 can link to each other — they need a source handle
   const isSplunk = toolName === 'Splunk';
@@ -211,18 +212,34 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <div className={`custom-node ${nodeClass} ${selected ? 'selected-node' : ''}`}>
         <Handle type="target" position={Position.Left} id="in" />
         <div className="node-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
             {renderIcon()}
             <span className="node-title">{data.label as string}</span>
+            {isStorageTool && (
+              <span style={{
+                marginLeft: 'auto',
+                fontSize: '8px',
+                background: 'rgba(0, 150, 136, 0.25)',
+                color: '#1de9b6',
+                border: '1px solid rgba(0, 150, 136, 0.4)',
+                borderRadius: '3px',
+                padding: '1px 4px',
+                fontWeight: 'bold',
+                letterSpacing: '0.05em',
+                whiteSpace: 'nowrap'
+              }}>
+                ∞ ELASTIC
+              </span>
+            )}
           </div>
-          <span style={{ fontSize: '12px', color: '#666' }}>⋮</span>
+          {!isStorageTool && <span style={{ fontSize: '12px', color: '#666', marginLeft: '6px' }}>⋮</span>}
         </div>
         <div className="node-meta-small" style={{ fontSize: '9px', fontWeight: 600 }}>
           {toolName ? `${toolName}` : `Type: ${configType}`}
         </div>
 
         {/* Show expected format for metadata tools */}
-        {isMetadataTool && !!data.expectedFormat && (
+        {isMetadataTool && !isFederatedSearch && !!data.expectedFormat && (
           <div className="node-meta-small" style={{ opacity: 0.7, fontSize: '8.5px' }}>
             Expects: {data.expectedFormat as string}
           </div>
@@ -245,11 +262,53 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         )}
 
-        {isRunning && (
+        {isRunning && !isFederatedSearch && (
           <div className="node-metrics" style={{ marginTop: '8px' }}>
             <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
+            {(isMetadataTool || isStorageTool) && (
+              <span style={{ color: '#00e5ff', display: 'block', fontSize: '9px', marginTop: '2px' }}>
+                Ingested: {formatBytes(data.totalIngestedBytes as number)}
+              </span>
+            )}
           </div>
         )}
+
+        {/* Infinite Storage Pool visualizer */}
+        {isStorageTool && (
+          <div className="storage-capacity-bar" style={{
+            marginTop: '8px',
+            background: 'rgba(0, 77, 64, 0.2)',
+            border: '1px dashed rgba(0, 150, 136, 0.3)',
+            borderRadius: '4px',
+            padding: '4px 6px',
+            fontSize: '8.5px',
+            color: '#b2dfdb'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+              <span>Storage Pool</span>
+              <span style={{ color: '#1de9b6', fontWeight: 'bold' }}>∞ Unlimited</span>
+            </div>
+            <div className="storage-wave-container" style={{
+              height: '4px',
+              background: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              <div className="storage-wave-fill" style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: '100%',
+                background: 'linear-gradient(90deg, #004d40, #1de9b6, #004d40)',
+                backgroundSize: '200% 100%',
+                animation: isRunning ? 'storage-pulse-scroll 1.5s linear infinite' : 'none'
+              }} />
+            </div>
+          </div>
+        )}
+
         {canLinkOut && (
           <Handle type="source" position={Position.Right} id="out" />
         )}

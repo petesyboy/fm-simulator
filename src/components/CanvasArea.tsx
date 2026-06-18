@@ -4,12 +4,11 @@ import {
   useReactFlow,
   useViewport,
   Background,
-  Controls,
-  type Node
+  Controls
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
-import { useStore } from '../store/store';
+import { useStore, type CustomNode } from '../store/store';
 import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode, GroupNode } from './CustomNodes';
 import { NODE_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
 import dashboardImg from '../assets/dashboard-mock.webp';
@@ -47,7 +46,7 @@ const nodeTypes = {
 import type { Edge } from '@xyflow/react';
 
 interface FederatedEnclosuresProps {
-  nodes: Node[];
+  nodes: CustomNode[];
   edges: Edge[];
   onShowDashboard: () => void;
 }
@@ -62,7 +61,7 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges,
   /** Group all S3 nodes connected to the same Splunk node. */
   const groups = useMemo(() => {
     // Map of Splunk node ID to the group of nodes (Splunk + all its S3s)
-    const splunkGroups = new Map<string, Node[]>();
+    const splunkGroups = new Map<string, CustomNode[]>();
 
     for (const edge of edges) {
       const sourceNode = nodes.find((n) => n.id === edge.source);
@@ -74,8 +73,8 @@ const FederatedEnclosures: React.FC<FederatedEnclosuresProps> = ({ nodes, edges,
       const srcConfig = (sourceNode.data?.configType as string) || '';
       const tgtConfig = (targetNode.data?.configType as string) || '';
 
-      let splunkNode: Node | null = null;
-      let s3Node: Node | null = null;
+      let splunkNode: CustomNode | null = null;
+      let s3Node: CustomNode | null = null;
 
       if (srcTool === 'Splunk' && tgtConfig === 'Storage Tool') {
         splunkNode = sourceNode;
@@ -306,7 +305,7 @@ const CanvasArea: React.FC = () => {
         mergedData.lastDedupUpdate = Date.now();
       }
 
-      const newNode: Node = {
+      const newNode: CustomNode = {
         id: uuidv4(),
         type,
         position,
@@ -342,7 +341,7 @@ const CanvasArea: React.FC = () => {
     [screenToFlowPosition, addNode, addTrafficStream, nodes]
   );
 
-  const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
+  const onSelectionChange = useCallback(({ nodes }: { nodes: CustomNode[] }) => {
     if (nodes.length === 1) {
       setSelectedNodeId(nodes[0].id);
     } else {

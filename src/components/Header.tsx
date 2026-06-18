@@ -16,6 +16,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store/store';
+import pkg from '../../package.json';
 
 // ─── Toast notification ───────────────────────────────────────────────────────
 
@@ -112,7 +113,10 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
         {/* ── Top Brand Bar ── */}
         <header className="header-brand">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span className="brand-logo">Gigamon Flow Mapping Example</span>
+            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+              <span className="brand-logo">Gigamon Flow Mapping Example</span>
+              <span className="build-number">v{pkg.version}</span>
+            </div>
             <div className="tab monitoring-session active">Monitoring Session</div>
           </div>
 

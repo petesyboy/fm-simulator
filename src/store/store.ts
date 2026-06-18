@@ -8,7 +8,6 @@ import {
   type EdgeChange,
   type Node,
   type NodeChange,
-  type OnNodesChange,
   type OnEdgesChange,
   type OnConnect,
 } from '@xyflow/react';
@@ -46,8 +45,57 @@ export interface MapCondition {
   action?: 'pass' | 'drop';
 }
 
+export type NodeType = 
+  | 'inputNode' 
+  | 'mapNode' 
+  | 'filterNode' 
+  | 'toolNode' 
+  | 'gigaSmartNode' 
+  | 'gigaStreamNode' 
+  | 'groupNode';
+
+export interface BaseNodeData {
+  label: string;
+  configType: string;
+  status?: 'optimal' | 'warning' | 'error';
+  statusMessage?: string;
+  receivedFormat?: string;
+  totalIngestedBytes?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Add index signature
+}
+
+export interface InputNodeData extends BaseNodeData {
+  configType: 'SPAN Port' | 'Network Tap' | 'Virtual TAP' | 'GigaVUE-VM';
+}
+
+export interface MapNodeData extends BaseNodeData {
+  configType: 'Traffic Map';
+  conditions: MapCondition[];
+}
+
+export interface FilterNodeData extends BaseNodeData {
+  configType: 'VLAN Filter' | 'IP Subnet Filter' | 'Port Filter';
+  vlanIds?: string;
+  ipSubnet?: string;
+  ports?: string;
+}
+
+export interface GigaSmartNodeData extends BaseNodeData {
+  actionType: string;
+  dedupRate?: number;
+  lastDedupUpdate?: number;
+  metadataFormat?: 'CEF' | 'JSON';
+}
+
+export interface ToolNodeData extends BaseNodeData {
+  expectedFormat?: string;
+}
+
+export type CustomNode = Node<BaseNodeData>;
+
 export type RFState = {
-  nodes: Node[];
+  nodes: CustomNode[];
   edges: Edge[];
   selectedNodeId: string | null;
   isRunning: boolean;
@@ -58,13 +106,13 @@ export type RFState = {
   blockedEdges: string[];
   deliveredStreams: string[];
   fitViewTrigger: number;
-  onNodesChange: OnNodesChange;
+  onNodesChange: (changes: NodeChange<CustomNode>[]) => void;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
-  addNode: (node: Node) => void;
+  addNode: (node: CustomNode) => void;
   setSelectedNodeId: (nodeId: string | null) => void;
-  updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
-  restoreState: (nodes: Node[], edges: Edge[], trafficStreams?: TrafficStream[]) => void;
+  updateNodeData: (nodeId: string, data: Partial<BaseNodeData>) => void;
+  restoreState: (nodes: CustomNode[], edges: Edge[], trafficStreams?: TrafficStream[]) => void;
   toggleSimulation: () => void;
   setSimulationSpeed: (speed: number) => void;
   addTrafficStream: (stream: TrafficStream) => void;
@@ -94,6 +142,45 @@ export type RFState = {
   ungroupGroup: (groupId: string) => void;
 };
 
+/**
+ * Toggles a Splunk node's label between 'Splunk Federated Search' and 'Splunk Collector' 
+ * based on whether it is connected/linked to an S3/Object Storage node.
+ */
+export function syncSplunkLabels(nodes: CustomNode[], edges: Edge[]): CustomNode[] {
+  return nodes.map(node => {
+    const toolName = (node.data?.toolName as string) || '';
+    if (toolName === 'Splunk') {
+      const currentLabel = (node.data?.label as string) || '';
+      if (
+        currentLabel === 'Splunk Collector' || 
+        currentLabel === 'Splunk Tool' || 
+        currentLabel === 'Splunk Federated Search'
+      ) {
+        const isLinkedToS3 = edges.some(edge => {
+          if (edge.source === node.id || edge.target === node.id) {
+            const otherNodeId = edge.source === node.id ? edge.target : edge.source;
+            const otherNode = nodes.find(n => n.id === otherNodeId);
+            return otherNode?.data?.configType === 'Storage Tool'; // Storage Tool is CONFIG_TYPES.STORAGE_TOOL
+          }
+          return false;
+        });
+
+        const targetLabel = isLinkedToS3 ? 'Splunk Federated Search' : 'Splunk Collector';
+        if (currentLabel !== targetLabel) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: targetLabel
+            }
+          };
+        }
+      }
+    }
+    return node;
+  });
+}
+
 // Create a default topology
 const defaultInputId = 'node-input-1';
 const tapInputId2 = 'node-input-tap-2';
@@ -109,7 +196,7 @@ const defaultToolHopId = 'node-tool-1';
 const defaultAmiId = 'node-gigasmart-ami-1';
 const defaultToolSplunkId = 'node-tool-splunk-1';
 
-const initialNodes: Node[] = [
+const initialNodes: CustomNode[] = [
   {
     id: defaultInputId,
     type: 'inputNode',
@@ -186,7 +273,7 @@ const initialNodes: Node[] = [
     id: defaultToolSplunkId,
     type: 'toolNode',
     position: { x: 1160, y: 340 },
-    data: { label: 'Splunk Tool', configType: 'Metadata Tool', expectedFormat: 'CEF' },
+    data: { label: 'Splunk Collector', configType: 'Metadata Tool', toolName: 'Splunk', expectedType: 'metadata', expectedFormat: 'CEF' },
   },
 ];
 
@@ -337,8 +424,8 @@ export const useStore = create<RFState>((set, get) => ({
   deliveredStreams: [],
   fitViewTrigger: 0,
   
-  onNodesChange: (changes: NodeChange[]) => {
-    let nextNodes = applyNodeChanges(changes, get().nodes);
+  onNodesChange: (changes: NodeChange<CustomNode>[]) => {
+    let nextNodes = applyNodeChanges<CustomNode>(changes, get().nodes);
     const deletedNodeIds = changes
       .filter((c) => c.type === 'remove')
       .map((c) => (c as { id: string }).id);
@@ -385,7 +472,9 @@ export const useStore = create<RFState>((set, get) => ({
   },
   
   onEdgesChange: (changes: EdgeChange[]) => {
-    set({ edges: applyEdgeChanges(changes, get().edges) });
+    const nextEdges = applyEdgeChanges(changes, get().edges);
+    const syncedNodes = syncSplunkLabels(get().nodes, nextEdges);
+    set({ edges: nextEdges, nodes: syncedNodes });
   },
   
   onConnect: (connection: Connection) => {
@@ -393,10 +482,12 @@ export const useStore = create<RFState>((set, get) => ({
       ...connection,
       id: `e-${uuidv4()}`,
     };
-    set({ edges: addEdge(newEdge, get().edges) });
+    const nextEdges = addEdge(newEdge, get().edges);
+    const syncedNodes = syncSplunkLabels(get().nodes, nextEdges);
+    set({ edges: nextEdges, nodes: syncedNodes });
   },
   
-  addNode: (node: Node) => {
+  addNode: (node: CustomNode) => {
     set({ nodes: get().nodes.concat(node) });
   },
   
@@ -404,17 +495,18 @@ export const useStore = create<RFState>((set, get) => ({
     set({ selectedNodeId: nodeId });
   },
   
-  updateNodeData: (nodeId: string, data: Record<string, unknown>) => {
+  updateNodeData: (nodeId: string, data: Partial<BaseNodeData>) => {
+    const updatedNodes = get().nodes.map((node) => 
+      node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
+    );
     set({
-      nodes: get().nodes.map((node) => 
-        node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
-      ),
+      nodes: syncSplunkLabels(updatedNodes, get().edges),
     });
   },
   
-  restoreState: (nodes: Node[], edges: Edge[], trafficStreams?: TrafficStream[]) => {
+  restoreState: (nodes: CustomNode[], edges: Edge[], trafficStreams?: TrafficStream[]) => {
     set({
-      nodes,
+      nodes: syncSplunkLabels(nodes, edges),
       edges,
       trafficStreams: trafficStreams || get().trafficStreams,
       fitViewTrigger: get().fitViewTrigger + 1
@@ -464,7 +556,14 @@ export const useStore = create<RFState>((set, get) => ({
   },
 
   resetMetrics: () => {
-    set({ nodeMetrics: {}, activeEdges: [], blockedEdges: [], deliveredStreams: [] });
+    const resetNodes = get().nodes.map(n => ({ ...n, data: { ...n.data, totalIngestedBytes: 0 } }));
+    set({ 
+      nodeMetrics: {}, 
+      activeEdges: [], 
+      blockedEdges: [], 
+      deliveredStreams: [],
+      nodes: syncSplunkLabels(resetNodes, get().edges)
+    });
   },
 
   updateSimulationTick: (
@@ -477,6 +576,25 @@ export const useStore = create<RFState>((set, get) => ({
   ) => {
     // Apply node-data patches (e.g. dedupRate drift, tool status)
     let nextNodes = get().nodes;
+    
+    // Accumulate total ingested bytes for tool nodes before applying other patches
+    nextNodes = nextNodes.map((node) => {
+      if (node.type === NODE_TYPES.TOOL) {
+        const rxMbps = metrics[node.id]?.rxBps || 0;
+        // Each tick represents 0.8 seconds of traffic
+        const deltaBytes = (rxMbps * 1000000 / 8) * 0.8;
+        const currentTotal = (node.data.totalIngestedBytes as number) || 0;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            totalIngestedBytes: currentTotal + deltaBytes,
+          },
+        };
+      }
+      return node;
+    });
+
     if (nodeDataPatches && Object.keys(nodeDataPatches).length > 0) {
       nextNodes = nextNodes.map((node) =>
         nodeDataPatches[node.id]
@@ -510,7 +628,7 @@ export const useStore = create<RFState>((set, get) => ({
 
   loadDemo: () => {
     set({
-      nodes: initialNodes,
+      nodes: syncSplunkLabels(initialNodes, initialEdges),
       edges: initialEdges,
       selectedNodeId: null,
       isRunning: false,
@@ -551,7 +669,7 @@ export const useStore = create<RFState>((set, get) => ({
     const groupId = `group-${uuidv4()}`;
 
     // 2. Create the group node
-    const groupNode: Node = {
+    const groupNode: CustomNode = {
       id: groupId,
       type: 'groupNode',
       position: { x: parentX, y: parentY },
@@ -618,7 +736,7 @@ export const useStore = create<RFState>((set, get) => ({
     );
 
     set({
-      nodes: updatedNodes,
+      nodes: syncSplunkLabels(updatedNodes, updatedEdges),
       edges: updatedEdges,
       selectedNodeId: get().selectedNodeId === groupId ? null : get().selectedNodeId,
     });
