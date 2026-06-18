@@ -173,6 +173,7 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isPacketTool = configType === CONFIG_TYPES.PACKET_TOOL;
   const isMetadataTool = configType === CONFIG_TYPES.METADATA_TOOL;
   const isStorageTool = configType === CONFIG_TYPES.STORAGE_TOOL;
+  const isFederatedSearch = data.label === 'Splunk Federated Search';
 
   // Splunk and S3 can link to each other — they need a source handle
   const isSplunk = toolName === 'Splunk';
@@ -230,7 +231,7 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
 
         {/* Show expected format for metadata tools */}
-        {isMetadataTool && !!data.expectedFormat && (
+        {isMetadataTool && !isFederatedSearch && !!data.expectedFormat && (
           <div className="node-meta-small" style={{ opacity: 0.7, fontSize: '8.5px' }}>
             Expects: {data.expectedFormat as string}
           </div>
@@ -253,7 +254,7 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         )}
 
-        {isRunning && (
+        {isRunning && !isFederatedSearch && (
           <div className="node-metrics" style={{ marginTop: '8px' }}>
             <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
             {(isMetadataTool || isStorageTool) && (
