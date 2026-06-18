@@ -294,7 +294,7 @@ export const calculateSimulationStep = (
       } 
       else if (actionType === 'Application Metadata' || actionType === 'AMX' || actionType === 'AMI') {
         const format = data.metadataFormat || 'CEF';
-        const scale = (actionType === 'AMX' || actionType === 'AMI') ? 0.015 : 0.1;
+        const scale = (actionType === 'AMX' || actionType === 'AMI') ? 0.015 : 0.03; // Output is 3% of traffic for Application Metadata (between 1% and 5%)
         const metadataBandwidth = item.stream.bandwidth * scale;
 
         dropBandwidth = item.stream.bandwidth * (1 - scale);
