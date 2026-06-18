@@ -16,7 +16,7 @@
 import React from 'react';
 import { Handle, Position, NodeResizer, type NodeProps } from '@xyflow/react';
 import { useStore, type MapCondition } from '../store/store';
-import { formatBandwidth } from '../utils/format';
+import { formatBandwidth, formatPackets } from '../utils/format';
 import {
   MapIcon, GreenCircleIcon, SmartIcon, AppIcon,
   SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
@@ -64,12 +64,20 @@ export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         </div>
         <div className="node-type-label" style={{ display: 'block' }}>{nodeTypeLabel}</div>
-        <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8 }}>Type: {configType}</div>
+        <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8, display: 'flex', justifyContent: 'space-between' }}>
+          <span>Type: {configType}</span>
+          {Boolean(data.linkSpeed) && <span>Speed: {formatBandwidth(data.linkSpeed as number)}</span>}
+        </div>
 
         {/* Only show live metrics while simulation is running */}
         {isRunning && (
           <div className="node-metrics">
             <span>Tx: {formatBandwidth(metrics?.txBps)}</span>
+            {Boolean(data.linkSpeed) && (metrics?.droppedPackets || 0) > 0 && (
+              <span className="drop" title="Traffic dropped due to link speed exceeded">
+                (Drops: {formatPackets(metrics!.droppedPackets)})
+              </span>
+            )}
           </div>
         )}
         <Handle type="source" position={Position.Right} id="out" />

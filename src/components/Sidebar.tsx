@@ -105,23 +105,23 @@ const Sidebar: React.FC = () => {
               <div className="demo-group-label" style={{ padding: '6px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>SOURCES</div>
 
               {/* Input port types — dragging these creates an inputNode */}
-              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'SPAN Port 1/1/x1', { configType: CONFIG_TYPES.SPAN })}>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'SPAN Port 1/1/x1', { configType: CONFIG_TYPES.SPAN, linkSpeed: 10000 })}>
                 <SpanIcon size={18} />
                 <span>SPAN Port</span>
               </div>
-              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'TAP Device 1/1/x2', { configType: CONFIG_TYPES.TAP })}>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'TAP Device 1/1/x2', { configType: CONFIG_TYPES.TAP, linkSpeed: 10000 })}>
                 <TapIcon size={18} />
                 <span>TAP Device</span>
               </div>
-              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'ERSPAN Tunnel 10', { configType: CONFIG_TYPES.ERSPAN })}>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'ERSPAN Tunnel 10', { configType: CONFIG_TYPES.ERSPAN, linkSpeed: 10000 })}>
                 <ErspanIcon size={18} />
                 <span>ERSPAN Source</span>
               </div>
-              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'East/West Traffic 1', { configType: CONFIG_TYPES.EAST_WEST })}>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'East/West Traffic 1', { configType: CONFIG_TYPES.EAST_WEST, linkSpeed: 10000 })}>
                 <EastWestIcon size={18} />
                 <span>East/West Traffic</span>
               </div>
-              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'VMWare Estate 1', { configType: CONFIG_TYPES.VMWARE })}>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'VMWare Estate 1', { configType: CONFIG_TYPES.VMWARE, linkSpeed: 40000 })}>
                 <VmwareIcon size={18} />
                 <span>VMWare Estate</span>
               </div>

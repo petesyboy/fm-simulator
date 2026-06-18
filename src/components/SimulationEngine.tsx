@@ -316,8 +316,9 @@ const SimulationEngine: React.FC = () => {
       const deliveredStreamIds                                          = new Set<string>();
 
       // Seed the queue with each active traffic stream at its source node.
-      // Apply bandwidth drift here so all downstream calculations use the
-      // drifted value rather than the nominal bandwidth.
+      // Group by source node first to enforce physical link speeds (if configured).
+      const streamsBySource: Record<string, TrajectoryStream[]> = {};
+
       currentTraffic.forEach((stream) => {
         if (!stream.active) return;
 
@@ -328,11 +329,35 @@ const SimulationEngine: React.FC = () => {
         const effectiveDrift = streamPatches[stream.id]?.drift ?? stream.drift ?? 1.0;
         const driftedBandwidth = stream.bandwidth * effectiveDrift;
 
-        queue.push({
-          nodeId: sourceNode.id,
-          stream: { ...stream, bandwidth: driftedBandwidth, trafficType: 'packet' },
-          edgePath: [],
-        });
+        if (!streamsBySource[sourceNode.id]) streamsBySource[sourceNode.id] = [];
+        streamsBySource[sourceNode.id].push({ ...stream, bandwidth: driftedBandwidth, trafficType: 'packet' });
+      });
+
+      Object.entries(streamsBySource).forEach(([nodeId, nodeStreams]) => {
+        const sourceNode = currentNodes.find(n => n.id === nodeId);
+        const linkSpeed = (sourceNode?.data?.linkSpeed as number) || Infinity;
+        
+        const totalRequested = nodeStreams.reduce((sum, s) => sum + s.bandwidth, 0);
+        
+        if (totalRequested > linkSpeed) {
+          // Traffic exceeds physical port capacity. Cap it and record ingress drops.
+          const droppedBps = totalRequested - linkSpeed;
+          if (metrics[nodeId]) {
+            metrics[nodeId].droppedPackets += droppedBps * 250; // Approximated packet rate
+          }
+
+          // Scale down each stream proportionally so the sum equals linkSpeed
+          nodeStreams.forEach(stream => {
+            const scale = linkSpeed / totalRequested;
+            stream.bandwidth *= scale;
+            queue.push({ nodeId, stream, edgePath: [] });
+          });
+        } else {
+          // Link capacity is sufficient; enqueue streams unmodified
+          nodeStreams.forEach(stream => {
+            queue.push({ nodeId, stream, edgePath: [] });
+          });
+        }
       });
 
       // Safety valve: in a misconfigured graph (e.g. a cycle) the queue could
