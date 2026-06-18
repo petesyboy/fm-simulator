@@ -16,7 +16,7 @@
 import React from 'react';
 import { Handle, Position, NodeResizer, type NodeProps } from '@xyflow/react';
 import { useStore, type MapCondition } from '../store/store';
-import { formatBandwidth } from '../utils/format';
+import { formatBandwidth, formatBytes } from '../utils/format';
 import {
   MapIcon, GreenCircleIcon, SmartIcon, AppIcon,
   SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
@@ -240,6 +240,11 @@ export const ToolNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         {isRunning && (
           <div className="node-metrics" style={{ marginTop: '8px' }}>
             <span>Rx: {formatBandwidth(metrics?.rxBps)}</span>
+            {(isMetadataTool || isStorageTool) && (
+              <span style={{ color: '#00e5ff', display: 'block', fontSize: '9px', marginTop: '2px' }}>
+                Ingested: {formatBytes(data.totalIngestedBytes as number)}
+              </span>
+            )}
           </div>
         )}
         {canLinkOut && (

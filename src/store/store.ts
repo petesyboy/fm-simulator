@@ -60,6 +60,7 @@ export interface BaseNodeData {
   status?: 'optimal' | 'warning' | 'error';
   statusMessage?: string;
   receivedFormat?: string;
+  totalIngestedBytes?: number;
   [key: string]: any; // Add index signature
 }
 
@@ -510,7 +511,13 @@ export const useStore = create<RFState>((set, get) => ({
   },
 
   resetMetrics: () => {
-    set({ nodeMetrics: {}, activeEdges: [], blockedEdges: [], deliveredStreams: [] });
+    set({ 
+      nodeMetrics: {}, 
+      activeEdges: [], 
+      blockedEdges: [], 
+      deliveredStreams: [],
+      nodes: get().nodes.map(n => ({ ...n, data: { ...n.data, totalIngestedBytes: 0 } }))
+    });
   },
 
   updateSimulationTick: (
@@ -523,6 +530,25 @@ export const useStore = create<RFState>((set, get) => ({
   ) => {
     // Apply node-data patches (e.g. dedupRate drift, tool status)
     let nextNodes = get().nodes;
+    
+    // Accumulate total ingested bytes for tool nodes before applying other patches
+    nextNodes = nextNodes.map((node) => {
+      if (node.type === NODE_TYPES.TOOL) {
+        const rxMbps = metrics[node.id]?.rxBps || 0;
+        // Each tick represents 0.8 seconds of traffic
+        const deltaBytes = (rxMbps * 1000000 / 8) * 0.8;
+        const currentTotal = (node.data.totalIngestedBytes as number) || 0;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            totalIngestedBytes: currentTotal + deltaBytes,
+          },
+        };
+      }
+      return node;
+    });
+
     if (nodeDataPatches && Object.keys(nodeDataPatches).length > 0) {
       nextNodes = nextNodes.map((node) =>
         nodeDataPatches[node.id]

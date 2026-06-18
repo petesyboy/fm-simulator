@@ -35,9 +35,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useStore, type MapCondition } from '../store/store';
-import { type Node } from '@xyflow/react';
-import { formatBandwidth, formatPackets } from '../utils/format';
+import { useStore, type MapCondition, type CustomNode } from '../store/store';
+import { formatBandwidth, formatPackets, formatBytes } from '../utils/format';
 import {
   NODE_TYPES,
   CONFIG_TYPES,
@@ -208,7 +207,7 @@ const DashboardPanel: React.FC<{ isRunning: boolean }> = ({ isRunning }) => {
  * Each port class has different relevant sub-options (port speed, TAP mode, etc.).
  */
 const InputNodePanel: React.FC<{
-  node: Node;
+  node: CustomNode;
   onGenericChange: (key: string, val: string) => void;
 }> = ({ node, onGenericChange }) => {
   const configType = (node.data?.configType as string) || CONFIG_TYPES.SPAN;
@@ -288,7 +287,7 @@ const InputNodePanel: React.FC<{
  * Only the relevant input is shown based on the node's configType.
  */
 const FilterNodePanel: React.FC<{
-  node: Node;
+  node: CustomNode;
   onGenericChange: (key: string, val: string) => void;
 }> = ({ node, onGenericChange }) => {
   const configType = (node.data?.configType as string) || '';
@@ -347,7 +346,7 @@ const MAP_CRITERIA = [
 ];
 
 const MapNodePanel: React.FC<{
-  node: Node;
+  node: CustomNode;
   onConditionChange: (index: number, key: string, value: string) => void;
   onAddCondition: () => void;
   onRemoveCondition: (index: number) => void;
@@ -442,7 +441,7 @@ const MapNodePanel: React.FC<{
  * for AMI/AMX/Application Metadata, or the live dedup rate read-only display).
  */
 const GigaSmartPanel: React.FC<{
-  node: Node;
+  node: CustomNode;
   onGenericChange: (key: string, val: string) => void;
 }> = ({ node, onGenericChange }) => {
   const actionType = (node.data?.actionType as string) || ACTION_TYPES.DEDUPLICATION;
@@ -504,12 +503,14 @@ const GigaSmartPanel: React.FC<{
  * Packet/Metadata tool configuration and live traffic status.
  */
 const ToolNodePanel: React.FC<{
-  node: Node;
+  node: CustomNode;
   onGenericChange: (key: string, val: string) => void;
   isRunning: boolean;
   metrics?: NodeMetrics;
 }> = ({ node, onGenericChange, isRunning, metrics }) => {
   const configType = (node.data?.configType as string) || CONFIG_TYPES.PACKET_TOOL;
+  const isMetadataTool = configType === CONFIG_TYPES.METADATA_TOOL;
+  const isStorageTool = configType === CONFIG_TYPES.STORAGE_TOOL;
 
   return (
     <>
@@ -520,6 +521,7 @@ const ToolNodePanel: React.FC<{
         >
           <option value={CONFIG_TYPES.PACKET_TOOL}>Packet Consuming Tool</option>
           <option value={CONFIG_TYPES.METADATA_TOOL}>Metadata Consuming Tool</option>
+          <option value={CONFIG_TYPES.STORAGE_TOOL}>S3 / Object Storage</option>
         </select>
       </FormGroup>
 
@@ -569,6 +571,37 @@ const ToolNodePanel: React.FC<{
             : '✓ Idle (No Traffic)'}
         </div>
       </FormGroup>
+
+      {/* Storage Estimates — for metadata and storage tools */}
+      {isRunning && (isMetadataTool || isStorageTool) && metrics && metrics.rxBps > 0 && (
+        <div style={{ marginTop: '15px', padding: '12px', background: 'rgba(0, 229, 255, 0.03)', borderRadius: '6px', border: '1px solid rgba(0, 229, 255, 0.1)' }}>
+          <h3 style={{ fontSize: '11px', margin: '0 0 10px 0', color: '#00e5ff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Storage Projections
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Current Total:</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{formatBytes(node.data?.totalIngestedBytes as number)}</span>
+            </div>
+            <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Daily (est.):</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{formatBytes(metrics.rxBps * 10800000000)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Weekly (est.):</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{formatBytes(metrics.rxBps * 10800000000 * 7)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Monthly (est.):</span>
+              <span style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>{formatBytes(metrics.rxBps * 10800000000 * 30)}</span>
+            </div>
+            <p style={{ margin: '8px 0 0 0', fontSize: '9px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              * Based on current ingestion rate. Estimates assume 24/7 operation at this bandwidth.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 };
