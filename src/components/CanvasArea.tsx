@@ -320,8 +320,19 @@ const CanvasArea: React.FC = () => {
         const speeds = [1, 10, 25, 40, 100];
         const randomGbps = speeds[Math.floor(Math.random() * speeds.length)];
         const linkSpeedMbps = randomGbps * 1000;
-        const initialBandwidthMbps = linkSpeedMbps * 0.5; // 50% utilization by default
-        const labelSpeedStr = randomGbps === 1 ? '500 Mbps' : `${randomGbps * 0.5} Gbps`;
+        
+        // Select a random starting utilization from 1%, 10%, 25%, 50%, 75%, or 100%
+        const randomUtilization = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00][Math.floor(Math.random() * 6)];
+        const initialBandwidthMbps = linkSpeedMbps * randomUtilization;
+        
+        let labelSpeedStr = '';
+        const bandwidthGbps = initialBandwidthMbps / 1000;
+        if (bandwidthGbps < 1) {
+          labelSpeedStr = `${Math.round(bandwidthGbps * 1000)} Mbps`;
+        } else {
+          labelSpeedStr = `${bandwidthGbps.toFixed(1).replace('.0', '')} Gbps`;
+        }
+
         const randomSubnet = Math.floor(Math.random() * 254) + 1;
         const randomVlan = String(Math.floor(Math.random() * 900) + 100);
         

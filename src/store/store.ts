@@ -291,7 +291,7 @@ const initialTraffic: TrafficStream[] = [
   },
   {
     id: 't-3',
-    name: 'DNS Query Flood (1 Gbps)',
+    name: 'DNS Query Flood (1.5 Gbps)',
     sourceNodeId: defaultInputId,
     vlan: '100',
     ipSrc: '192.168.1.15',
@@ -299,7 +299,7 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '60124',
     portDst: '53',
     protocol: 'udp',
-    bandwidth: 1000, // 1 Gbps
+    bandwidth: 1500, // 1.5 Gbps
     active: true,
   },
   {
@@ -317,7 +317,7 @@ const initialTraffic: TrafficStream[] = [
   },
   {
     id: 't-tap-2',
-    name: 'TAP 2 Flow (5 Gbps)',
+    name: 'TAP 2 Flow (10 Gbps)',
     sourceNodeId: tapInputId2,
     vlan: '100',
     ipSrc: '192.168.10.2',
@@ -325,7 +325,7 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '50002',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 5000,
+    bandwidth: 10000, // 100% utilization
     active: true,
   },
   {
@@ -338,12 +338,12 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '50003',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 5000,
+    bandwidth: 5000, // 50% utilization
     active: true,
   },
   {
     id: 't-tap-4',
-    name: 'TAP 4 Flow (500 Mbps)',
+    name: 'TAP 4 Flow (10 Mbps)',
     sourceNodeId: tapInputId4,
     vlan: '100',
     ipSrc: '192.168.10.4',
@@ -351,12 +351,12 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '50004',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 500,
+    bandwidth: 10, // 1% utilization (10 Mbps on 1 Gbps port)
     active: true,
   },
   {
     id: 't-tap-5',
-    name: 'TAP 5 Flow (12.5 Gbps)',
+    name: 'TAP 5 Flow (15 Gbps)',
     sourceNodeId: tapInputId5,
     vlan: '100',
     ipSrc: '192.168.10.5',
@@ -364,7 +364,7 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '50005',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 12500,
+    bandwidth: 15000, // 60% utilization (15 Gbps on 25 Gbps port)
     active: true,
   },
   {
@@ -377,7 +377,7 @@ const initialTraffic: TrafficStream[] = [
     portSrc: '50006',
     portDst: '80',
     protocol: 'tcp',
-    bandwidth: 42000,
+    bandwidth: 42000, // 105% utilization (exceeds link speed to show drops)
     active: true,
   }
 ];
