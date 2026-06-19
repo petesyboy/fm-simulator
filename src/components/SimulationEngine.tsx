@@ -64,27 +64,29 @@ const SimulationEngine: React.FC = () => {
       trafficStreams.forEach((stream) => {
         if (!stream.active) return;
 
-        const lastUpdate   = (stream.lastDriftUpdate as number) || 0;
-        const currentDrift = stream.drift ?? 1.0;
+        // Calculate a smooth sine-wave drift to simulate real-world traffic variability.
+        // The drift oscillates between 0.4 and 1.0 (40% to 100% of base bandwidth) over a ~50s cycle.
+        const timeFactor = now / 8000;
+        const phase = stream.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) * 0.1;
+        const newDrift = 0.7 + 0.3 * Math.sin(timeFactor + phase);
 
-        if (stream.drift === undefined) {
-          streamPatches[stream.id] = { drift: 1.0, lastDriftUpdate: now };
-        } else if (now - lastUpdate >= 2000) {
-          const delta    = (Math.random() * 3 - 1.5) / 100;
-          const newDrift = Math.min(1.05, Math.max(0.95, currentDrift + delta));
-          streamPatches[stream.id] = { drift: newDrift, lastDriftUpdate: now };
-        }
+        streamPatches[stream.id] = { 
+          drift: newDrift, 
+          lastDriftUpdate: now 
+        };
       });
 
       // ── 2. Run Core Simulation Logic ──
       // Pass the existing nodes/edges/streams. 
-      // Note: calculateSimulationStep should ideally use the drifted values.
-      // We'll update the streams with patches before passing them to the simulation.
+      // Apply the drift to the bandwidth inside driftedStreams so that the simulation calculations (and node metrics) reflect the drift.
       const driftedStreams = trafficStreams.map(s => {
-        if (streamPatches[s.id]) {
-          return { ...s, ...streamPatches[s.id] };
-        }
-        return s;
+        const patch = streamPatches[s.id];
+        const drift = patch?.drift ?? s.drift ?? 1.0;
+        return {
+          ...s,
+          ...patch,
+          bandwidth: s.bandwidth * drift
+        };
       });
 
       const result = calculateSimulationStep(nodes, edges, driftedStreams);
