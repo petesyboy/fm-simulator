@@ -6,15 +6,18 @@ Welcome to the **Gigamon Fabric Manager & Flow Map Simulator**, an interactive v
 
 ## Key Features
 
-1. **Interactive Node Canvas**: Drag-and-drop network elements (SPAN, TAP, ERSPAN), Traffic Maps, Filters, GigaSMART engines (Deduplication, Slicing, SSL Decryption, etc.), Load Balancers, and target Security/Monitoring tools.
-2. **Auto-Generated Live Traffic**: Dragging any traffic source node onto the canvas automatically spawns a live traffic stream (1-100 Gbps bandwidth) with random IP, VLAN, and protocol data.
-3. **Live GigaSMART Deduplication Drift**: Deduplication nodes on the canvas dynamically drift their duplicate drop rate between `10%` and `50%` in real time, rendering the current rate directly onto the canvas node icon.
-4. **Flow Validation & Warnings**: Validates traffic paths dynamically. E.g., alerts are flagged if a Packet Tool (like Vectra) receives metadata instead of raw packets, or if a SIEM tool (like Splunk) receives format mismatches.
+1. **Interactive Node Canvas**: Drag-and-drop network elements (SPAN Port, TAP Device, ERSPAN Source, East/West Traffic, and VMWare Estate), Traffic Maps, Filters (VLAN, IP Subnet, Port), GigaSMART engines (Deduplication, Slicing, Header Stripping, SSL Decryption, etc.), Load Balancers, and target tools (Packet, Metadata, and Storage tools).
+2. **Auto-Generated Live Traffic**: Dragging any traffic source node onto the canvas automatically spawns a live traffic stream (speeds selected from standard rates like 1, 10, 25, 40, or 100 Gbps) with random IP, VLAN, and protocol data.
+3. **Live GigaSMART Deduplication Drift**: Dedup nodes on the canvas dynamically drift their duplicate drop rate between `10%` and `50%` in real time, rendering the current rate directly onto the canvas node.
+4. **Flow Validation & Warnings**: Validates traffic paths dynamically. E.g., alerts are flagged if a Packet Tool (like Vectra or Wireshark) receives metadata instead of raw packets, or if a SIEM tool (like Splunk) receives format mismatches.
 5. **Port Grouping**: Group multiple traffic sources together inside a Port Group node. Connecting the group container to a Traffic Map aggregates all nested source interfaces.
 6. **Federated Search Enclosures**: Connect a Splunk node to an S3 / Object Storage node to visually group them with a dashed enclosure, representing a unified federated search entity across traditional ingest and object storage.
 7. **Edge Deletion UI**: Click on any link between two nodes to select it and reveal a hovering banner with path details and an easy delete option (or just press the 'Delete' key).
 8. **Real-time Status Drawer**: Tracks and badges each traffic stream as `✓ Passed`, `❌ Filtered`, or `Idle` based on active path deliveries.
 9. **Collapsible Config Panel**: Slide the properties panel off the screen to make more room on the canvas, with intelligent auto-expansion when a node is selected.
+10. **Keyboard Shortcuts**: Spacebar toggles simulation play/pause; `Ctrl + S` triggers saving the current layout configuration.
+11. **Save/Load Slots**: Multi-slot layout storage allows naming and loading custom network topology snapshots dynamically.
+12. **Congestion & Port Drops**: Physical interface congestion simulation: if a traffic stream's bandwidth exceeds the port's link speed capacity (e.g. 42 Gbps traffic on a 40 Gbps SPAN port), the interface will register packet drops and display a warning status badge.
 
 ---
 
@@ -54,11 +57,11 @@ Here is how to set up a basic flow map that routes mirror traffic through a Giga
 1. Look at the left sidebar under the **"Demonstration"** section.
 2. Drag a **SPAN Port** (or a **TAP Device**) and drop it onto the canvas grid.
 3. You will immediately see a new port allocated (e.g., `1/1/x1`).
-4. In the bottom **Traffic Generator** drawer, note that a new live traffic stream has been generated automatically with a random bandwidth between 1 and 100 Gbps (e.g., `52.4 Gbps`).
+4. In the bottom **Traffic Generator** drawer, note that a new live traffic stream has been generated automatically with a standard bandwidth matching the dropped node's port speed (e.g., `10 Gbps`).
 
 ### Step 2: Add a Basic Traffic Map
 
-1. In the left sidebar, find the **"Traffic Map"** node.
+1. In the left sidebar, find the **"Traffic Map"** node (or click **"New Map"** under the **"New"** section).
 2. Drag and drop it onto the canvas.
 3. Connect the right handle of your **SPAN Port** to the left handle of your **Traffic Map**.
 4. *(Optional)* Click on the Traffic Map node in the properties panel. Click **"+ Add Match Condition"** and choose options like `VLAN ID` (e.g., `100`) or `IP Version` (`IPv4` or `IPv6`) to restrict what traffic is allowed through the map.
@@ -72,7 +75,7 @@ Here is how to set up a basic flow map that routes mirror traffic through a Giga
 
 ### Step 4: Output to a Vectra Sensor
 
-1. In the left sidebar under **"Packet Tools"**, find the **Vectra** sensor.
+1. In the left sidebar under **"PACKET CONSUMING TOOLS"**, find the **Vectra** sensor.
 2. Drag and drop it onto the canvas.
 3. Connect the right handle of the **GigaSMART** deduplication node to the left handle of the **Vectra** node.
 4. Click **"▶ Run Simulation"** in the top menu bar.

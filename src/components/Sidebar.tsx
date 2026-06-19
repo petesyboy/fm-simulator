@@ -40,7 +40,7 @@ const appsList = [
   { label: 'Application Metadata', type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.APP_METADATA,   configType: ACTION_TYPES.APP_METADATA } },
   { label: 'Application Visualization', type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.APP_VIS,    configType: ACTION_TYPES.APP_VIS } },
   { label: '5G-Cloud',           type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.CLOUD_5G,          configType: ACTION_TYPES.CLOUD_5G } },
-  { label: 'Dedup',              type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.DEDUPLICATION,     configType: ACTION_TYPES.DEDUPLICATION } },
+  { label: 'Deduplication',      type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.DEDUPLICATION,     configType: ACTION_TYPES.DEDUPLICATION } },
   { label: 'GVHTTP2',            type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.GVHTTP2,           configType: ACTION_TYPES.GVHTTP2 } },
   { label: 'HeaderStripping',    type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.HEADER_STRIP,      configType: ACTION_TYPES.HEADER_STRIP } },
   { label: 'Load Balancing',     type: NODE_TYPES.GIGASTREAM, initial: { algorithm: 'Round Robin' } },
