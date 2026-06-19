@@ -115,7 +115,15 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
               <span className="brand-logo">Gigamon Flow Mapping Example</span>
-              <span className="build-number">v{pkg.version}</span>
+              <span className="build-number">
+                v{(() => {
+                  const parts = pkg.version.split('.');
+                  if (parts.length >= 3) {
+                    return parts[2] === '0' ? `${parts[0]}.${parts[1]}` : `${parts[0]}.${parts[1]}${parts[2]}`;
+                  }
+                  return pkg.version;
+                })()}
+              </span>
             </div>
             <div className="tab monitoring-session active">Monitoring Session</div>
           </div>
