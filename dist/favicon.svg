@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <mask id="g-mask">
+      <!-- Everything white is kept -->
+      <rect x="0" y="0" width="512" height="512" fill="white" />
+      <!-- Inner hole (black) -->
+      <circle cx="256" cy="256" r="126" fill="black" />
+      <!-- Upper right gap (black) -->
+      <rect x="256" y="160" width="256" height="96" fill="black" />
+    </mask>
+  </defs>
+  
+  <!-- Outer orange circle with mask applied -->
+  <circle cx="256" cy="256" r="210" fill="#FF6C00" mask="url(#g-mask)" />
+  
+  <!-- Orange horizontal bar -->
+  <rect x="256" y="256" width="164" height="80" fill="#FF6C00" />
+</svg>
