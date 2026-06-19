@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { matchesVlan, matchesIp, matchesPort, evaluateMapConditions } from './simulation';
-import { type TrafficStream } from '../store/store';
+import { matchesVlan, matchesIp, matchesPort, evaluateMapConditions, calculateSimulationStep } from './simulation';
+import { type TrafficStream, type CustomNode } from '../store/store';
 
 describe('Simulation Utils', () => {
   describe('matchesVlan', () => {
@@ -69,6 +69,73 @@ describe('Simulation Utils', () => {
     it('should evaluate drop conditions correctly', () => {
       expect(evaluateMapConditions(stream, [{ field: 'vlan', value: '100', action: 'drop' }])).toBe(false);
       expect(evaluateMapConditions(stream, [{ field: 'vlan', value: '200', action: 'drop' }])).toBe(true);
+    });
+  });
+
+  describe('calculateSimulationStep VLAN 999 TAP override', () => {
+    it('should force a TAP Device node linkSpeed to 40 Gbps if it hosts a VLAN 999 stream', () => {
+      const nodes: CustomNode[] = [
+        {
+          id: 'tap-node-vlan-999',
+          type: 'inputNode',
+          position: { x: 0, y: 0 },
+          data: { label: 'TAP Device', configType: 'TAP Device', linkSpeed: 1000 },
+        },
+      ];
+
+      const streams: TrafficStream[] = [
+        {
+          id: 'vlan-999-stream',
+          name: 'VLAN 999 Flow',
+          sourceNodeId: 'tap-node-vlan-999',
+          vlan: '999',
+          ipSrc: '10.0.0.1',
+          ipDst: '10.0.0.2',
+          portSrc: '80',
+          portDst: '80',
+          protocol: 'tcp',
+          bandwidth: 35000,
+          active: true,
+        },
+      ];
+
+      const result = calculateSimulationStep(nodes, [], streams);
+
+      expect(result.nodeDataPatches['tap-node-vlan-999']).toBeDefined();
+      expect(result.nodeDataPatches['tap-node-vlan-999'].linkSpeed).toBe(40000);
+      expect(nodes[0].data.linkSpeed).toBe(40000);
+    });
+
+    it('should not force a SPAN Port node linkSpeed to 40 Gbps even if it hosts a VLAN 999 stream', () => {
+      const nodes: CustomNode[] = [
+        {
+          id: 'span-node-vlan-999',
+          type: 'inputNode',
+          position: { x: 0, y: 0 },
+          data: { label: 'SPAN Port', configType: 'SPAN Port', linkSpeed: 1000 },
+        },
+      ];
+
+      const streams: TrafficStream[] = [
+        {
+          id: 'vlan-999-stream',
+          name: 'VLAN 999 Flow',
+          sourceNodeId: 'span-node-vlan-999',
+          vlan: '999',
+          ipSrc: '10.0.0.1',
+          ipDst: '10.0.0.2',
+          portSrc: '80',
+          portDst: '80',
+          protocol: 'tcp',
+          bandwidth: 35000,
+          active: true,
+        },
+      ];
+
+      const result = calculateSimulationStep(nodes, [], streams);
+
+      expect(result.nodeDataPatches['span-node-vlan-999']).toBeUndefined();
+      expect(nodes[0].data.linkSpeed).toBe(1000);
     });
   });
 });

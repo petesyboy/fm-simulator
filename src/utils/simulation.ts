@@ -157,6 +157,26 @@ export const calculateSimulationStep = (
 ): SimulationStepResult => {
   const nodeDataPatches: Record<string, Record<string, unknown>> = {};
 
+  // Ensure that any TAP Device node that has a VLAN 999 stream is set to 40 Gbps (40000 Mbps)
+  nodes.forEach((node) => {
+    if (node.type === 'inputNode' && String(node.data?.configType || '').startsWith('TAP')) {
+      const hasVlan999 = trafficStreams.some(
+        (stream) => stream.active && stream.sourceNodeId === node.id && stream.vlan === '999'
+      );
+      if (hasVlan999 && node.data?.linkSpeed !== 40000) {
+        nodeDataPatches[node.id] = {
+          ...nodeDataPatches[node.id],
+          linkSpeed: 40000
+        };
+        // Update the local node object linkSpeed so the rest of the calculation uses the new speed immediately
+        node.data = {
+          ...node.data,
+          linkSpeed: 40000
+        };
+      }
+    }
+  });
+
   // 1. Initialize metrics for all nodes
   const metrics: Record<string, NodeMetrics> = {};
   nodes.forEach((node) => {
