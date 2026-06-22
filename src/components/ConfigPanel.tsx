@@ -250,19 +250,15 @@ const HardwareNodePanel: React.FC<{
             <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>TAP Settings</h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <label style={{ fontSize: '11px', color: '#ccc' }}>Tapped Links:</label>
-              <input 
-                type="number" 
-                min={1} 
-                max={maxLinks}
+              <select 
                 value={node.data.tappedLinksCount ?? 1} 
-                onChange={e => {
-                  let val = parseInt(e.target.value);
-                  if (isNaN(val) || val < 1) val = 1;
-                  if (val > maxLinks) val = maxLinks;
-                  updateNodeData(node.id, { tappedLinksCount: val });
-                }}
+                onChange={e => updateNodeData(node.id, { tappedLinksCount: parseInt(e.target.value) })}
                 style={{ width: '60px', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
-              />
+              >
+                {Array.from({ length: maxLinks }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
             </div>
             <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>
               Specifies the number of links this TAP is monitoring (1-{maxLinks}).
