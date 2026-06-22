@@ -1,0 +1,128 @@
+{
+  "taps": [
+    {
+      "model": "TAP-M100T",
+      "sku": "TAP-M100T",
+      "ru": 0.5,
+      "type": "chassis",
+      "max_modules": 1
+    },
+    {
+      "model": "TAP-M200T",
+      "sku": "TAP-M200T",
+      "ru": 1,
+      "type": "chassis",
+      "max_modules": 3
+    },
+    {
+      "model": "TAP-M202ULT",
+      "sku": "TAP-M202ULT",
+      "ru": 1,
+      "type": "chassis",
+      "max_modules": 2
+    },
+    {
+      "model": "TAP-M251ULT",
+      "sku": "TAP-M251ULT",
+      "type": "module",
+      "split_ratio": "50/50",
+      "fiber_type": "Multimode",
+      "ports": 4
+    },
+    {
+      "model": "TAP-M253ULT",
+      "sku": "TAP-M253ULT",
+      "type": "module",
+      "split_ratio": "50/50",
+      "fiber_type": "Singlemode",
+      "ports": 2
+    }
+  ],
+  "ta_series": [
+    {
+      "model": "GigaVUE-TA25",
+      "sku": "TA25-BASE",
+      "power": "400W",
+      "fans": 8,
+      "airflow": "Front-to-Rear",
+      "ports": 48
+    },
+    {
+      "model": "GigaVUE-TA25E",
+      "sku": "TA25E-BASE",
+      "power": "400W",
+      "fans": 4,
+      "airflow": "Front-to-Rear",
+      "ports": 48
+    },
+    {
+      "model": "GigaVUE-TA100",
+      "sku": "TA100-BASE",
+      "power": "500W",
+      "fans": 4,
+      "airflow": "Front-to-Rear",
+      "ports": 32
+    },
+    {
+      "model": "GigaVUE-TA200",
+      "sku": "TA200-BASE",
+      "power": "1069W",
+      "fans": 8,
+      "airflow": "Front-to-Rear",
+      "ports": 128
+    },
+    {
+      "model": "GigaVUE-TA200E",
+      "sku": "TA200E-BASE",
+      "power": "800W",
+      "fans": 8,
+      "airflow": "Front-to-Rear",
+      "ports": 128
+    },
+    {
+      "model": "GigaVUE-TA400",
+      "sku": "TA400-BASE",
+      "power": "1000W",
+      "fans": 7,
+      "airflow": "Front-to-Rear",
+      "ports": 32
+    },
+    {
+      "model": "GigaVUE-TA400E",
+      "sku": "TA400E-BASE",
+      "power": "1294W",
+      "fans": 6,
+      "airflow": "Front-to-Rear",
+      "ports": 32
+    }
+  ],
+  "hc_series": [
+    {
+      "model": "GigaVUE-HC1",
+      "sku": "HC1-BASE",
+      "power": "450W",
+      "fans": 6,
+      "airflow": "Front-to-Rear",
+      "base_ports": 12,
+      "module_slots": 2
+    },
+    {
+      "model": "GigaVUE-HC1-Plus",
+      "sku": "HC1P-BASE",
+      "power": "850W",
+      "fans": 12,
+      "airflow": "Front-to-Rear",
+      "base_ports": 24,
+      "module_slots": 2
+    },
+    {
+      "model": "GigaVUE-HC3",
+      "sku": "HC3-BASE",
+      "power": "2000W",
+      "fans": 10,
+      "airflow": "Front-to-Rear",
+      "base_ports": 0,
+      "module_slots": 4
+    }
+  ]
+}

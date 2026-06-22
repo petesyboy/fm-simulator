@@ -16,6 +16,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store/store';
+import { NODE_TYPES } from '../constants/nodeTypes';
 import pkg from '../../package.json';
 
 // ─── Toast notification ───────────────────────────────────────────────────────
@@ -71,6 +72,87 @@ const ConfirmModal: React.FC<{
   </div>
 );
 
+// ─── BOM Modal ────────────────────────────────────────────────────────────────
+
+const BomModal: React.FC<{
+  onClose: () => void;
+}> = ({ onClose }) => {
+  const nodes = useStore((state) => state.nodes);
+  
+  // Aggregate hardware nodes and their optics
+  const bom: Record<string, { model: string; sku: string; qty: number; type: string }> = {};
+  
+  nodes.forEach(n => {
+    if (n.type === NODE_TYPES.HARDWARE) {
+      const sku = (n.data?.sku as string) || 'UNKNOWN-SKU';
+      const model = (n.data?.model as string) || 'Hardware';
+      if (!bom[sku]) bom[sku] = { model, sku, qty: 0, type: 'Appliance/TAP' };
+      bom[sku].qty += 1;
+      
+      const optics = (n.data?.optics as { board: string, optic: string, qty: number }[]) || [];
+      optics.forEach(opt => {
+        const optKey = `OPTIC-${opt.optic}`;
+        if (!bom[optKey]) bom[optKey] = { model: opt.optic, sku: opt.optic, qty: 0, type: 'Optic/Transceiver' };
+        bom[optKey].qty += opt.qty;
+      });
+    }
+  });
+  
+  const items = Object.values(bom).sort((a, b) => a.type.localeCompare(b.type) || a.model.localeCompare(b.model));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '24px', width: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.8)' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#ffb74d' }}>Bill of Materials (BOM)</h3>
+        
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
+          {items.length === 0 ? (
+            <div style={{ color: '#aaa', fontSize: '12px', textAlign: 'center', padding: '20px' }}>No hardware nodes tracked in the current layout.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #444' }}>
+                  <th style={{ padding: '8px', color: '#888' }}>Type</th>
+                  <th style={{ padding: '8px', color: '#888' }}>Model</th>
+                  <th style={{ padding: '8px', color: '#888' }}>SKU</th>
+                  <th style={{ padding: '8px', color: '#888', textAlign: 'right' }}>Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #333' }}>
+                    <td style={{ padding: '8px', color: '#ccc' }}>{item.type}</td>
+                    <td style={{ padding: '8px', color: '#fff', fontWeight: 'bold' }}>{item.model}</td>
+                    <td style={{ padding: '8px', color: '#00e5ff', fontFamily: 'monospace' }}>{item.sku}</td>
+                    <td style={{ padding: '8px', color: '#fff', textAlign: 'right' }}>{item.qty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '8px' }}>
+          <button onClick={() => {
+            const csv = ['Type,Model,SKU,Qty'].concat(items.map(i => `"${i.type}","${i.model}","${i.sku}",${i.qty}`)).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bom.csv';
+            a.click();
+          }} style={{ padding: '7px 16px', background: 'rgba(0,229,255,0.2)', border: '1px solid rgba(0,229,255,0.5)', color: '#00e5ff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>
+            Export CSV
+          </button>
+          <button onClick={onClose} style={{ padding: '7px 16px', background: '#2a2a2a', border: '1px solid #444', color: '#aaa', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Header component ─────────────────────────────────────────────────────────
 
 interface HeaderProps {
@@ -89,9 +171,11 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
   const setSimulationSpeed = useStore((state) => state.setSimulationSpeed);
   const clearCanvas    = useStore((state) => state.clearCanvas);
   const loadDemo       = useStore((state) => state.loadDemo);
+  const advancedMode   = useStore((state) => state.advancedMode);
 
   // Local UI state for the toast and confirm modal
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showBom, setShowBom] = useState(false);
 
   const handleClearRequest = () => setShowClearConfirm(true);
   const handleClearConfirm  = () => { clearCanvas(); setShowClearConfirm(false); };
@@ -108,6 +192,8 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
           onCancel={handleClearCancel}
         />
       )}
+
+      {showBom && <BomModal onClose={() => setShowBom(false)} />}
 
       <div className="header-wrapper">
         {/* ── Top Brand Bar ── */}
@@ -152,6 +238,12 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
                 </select>
               )}
             </div>
+
+            {advancedMode && (
+              <button className="header-btn" style={{ background: 'rgba(255, 152, 0, 0.2)', color: '#ffb74d', borderColor: 'rgba(255, 152, 0, 0.5)' }} onClick={() => setShowBom(true)}>
+                📋 View BOM
+              </button>
+            )}
 
             {/* Save button now opens the multi-slot modal in App.tsx */}
             <button className="header-btn primary" onClick={onSaveClick}>

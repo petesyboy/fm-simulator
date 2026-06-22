@@ -9,7 +9,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore, type CustomNode } from '../store/store';
-import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode, GroupNode } from './CustomNodes';
+import { InputNode, FilterNode, ToolNode, MapNode, GigaStreamNode, GigaSmartNode, GroupNode, HardwareNode } from './CustomNodes';
 import { NODE_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
 import dashboardImg from '../assets/dashboard-mock.webp';
 
@@ -32,6 +32,7 @@ const nodeTypes = {
   [NODE_TYPES.GIGASTREAM]: GigaStreamNode,
   [NODE_TYPES.GIGASMART]:  GigaSmartNode,
   [NODE_TYPES.GROUP]:      GroupNode,
+  [NODE_TYPES.HARDWARE]:   HardwareNode,
 };
 
 // ─── Federated Search Enclosure ───────────────────────────────────────────────

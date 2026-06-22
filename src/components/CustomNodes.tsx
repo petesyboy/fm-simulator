@@ -435,3 +435,34 @@ export const GroupNode: React.FC<NodeProps> = ({ data, selected }) => {
     </div>
   );
 };
+
+// ─── HardwareNode ─────────────────────────────────────────────────────────────
+
+export const HardwareNode: React.FC<NodeProps> = ({ data, selected }) => {
+  const model = (data.model as string) || 'Hardware';
+  const sku = (data.sku as string) || '';
+  
+  let iconComponent = <GreenCircleIcon size={20} />;
+  if (model.includes('TAP')) iconComponent = <TapIcon size={20} />;
+  else if (model.includes('HC')) iconComponent = <MapIcon size={20} />;
+
+  return (
+    <>
+      <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
+      <div className={`custom-node hardware-node ${selected ? 'selected-node' : ''}`} style={{ borderLeft: '4px solid #ff9800' }}>
+        <Handle type="target" position={Position.Left} id="in" />
+        <div className="node-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {iconComponent}
+            <span className="node-title">{data.label as string}</span>
+          </div>
+        </div>
+        <div className="node-type-label" style={{ display: 'block', color: '#ff9800', fontWeight: 'bold' }}>{model}</div>
+        <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8 }}>
+          <span>SKU: {sku}</span>
+        </div>
+        <Handle type="source" position={Position.Right} id="out" />
+      </div>
+    </>
+  );
+};

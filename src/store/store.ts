@@ -100,6 +100,7 @@ export type RFState = {
   selectedNodeId: string | null;
   isRunning: boolean;
   simulationSpeed: number; // multiplier, e.g. 1
+  advancedMode: boolean;
   trafficStreams: TrafficStream[];
   nodeMetrics: Record<string, NodeMetrics>;
   activeEdges: string[];
@@ -116,6 +117,7 @@ export type RFState = {
   restoreState: (nodes: CustomNode[], edges: Edge[], trafficStreams?: TrafficStream[]) => void;
   toggleSimulation: () => void;
   setSimulationSpeed: (speed: number) => void;
+  setAdvancedMode: (mode: boolean) => void;
   addTrafficStream: (stream: TrafficStream) => void;
   updateTrafficStream: (id: string, stream: Partial<TrafficStream>) => void;
   deleteTrafficStream: (id: string) => void;
@@ -388,6 +390,7 @@ export const useStore = create<RFState>((set, get) => ({
   selectedNodeId: null,
   isRunning: false,
   simulationSpeed: 1,
+  advancedMode: false,
   trafficStreams: initialTraffic,
   nodeMetrics: {},
   activeEdges: [],
@@ -507,6 +510,10 @@ export const useStore = create<RFState>((set, get) => ({
 
   setSimulationSpeed: (speed: number) => {
     set({ simulationSpeed: speed });
+  },
+
+  setAdvancedMode: (mode: boolean) => {
+    set({ advancedMode: mode });
   },
 
   addTrafficStream: (stream: TrafficStream) => {

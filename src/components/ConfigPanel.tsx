@@ -45,6 +45,8 @@ import {
   isDedupAction,
 } from '../constants/nodeTypes';
 import { type NodeMetrics } from '../store/store';
+import hardwareCatalogue from '../constants/hardwareCatalogue.json';
+import { getSupportedBoards, validateOptic } from '../utils/opticValidation';
 
 // ─── Shared form helpers ──────────────────────────────────────────────────────
 
@@ -107,6 +109,153 @@ const LiveMetrics: React.FC<{
     </div>
   </div>
 );
+
+// ─── HardwareNodePanel ────────────────────────────────────────────────────────
+
+const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
+  const model = node.data?.model as string;
+  const sku = node.data?.sku as string;
+  const installedOptics = (node.data?.optics as { board: string, optic: string, qty: number }[]) || [];
+  const updateNodeData = useStore(state => state.updateNodeData);
+
+  const [selectedBoard, setSelectedBoard] = useState('');
+  const [selectedOptic, setSelectedOptic] = useState('');
+  const [qty, setQty] = useState(1);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  let details: any = null;
+
+  if (model?.includes('TAP')) details = hardwareCatalogue.taps.find(t => t.sku === sku);
+  else if (model?.includes('TA')) details = hardwareCatalogue.ta_series.find(t => t.sku === sku);
+  else if (model?.includes('HC')) details = hardwareCatalogue.hc_series.find(t => t.sku === sku);
+
+  const supportedBoards = getSupportedBoards(model || '');
+  const activeBoardObj = supportedBoards.find(b => b.board === selectedBoard);
+
+  const handleAddOptic = () => {
+    setErrorMsg('');
+    if (!selectedBoard || !selectedOptic) {
+      setErrorMsg('Please select a board and an optic.');
+      return;
+    }
+    const validation = validateOptic(model, selectedBoard, selectedOptic);
+    if (!validation.valid) {
+      setErrorMsg(validation.message || 'Invalid optic combination.');
+      return;
+    }
+
+    const newOptics = [...installedOptics, { board: selectedBoard, optic: selectedOptic, qty }];
+    updateNodeData(node.id, { optics: newOptics });
+    // Reset selection after add
+    setSelectedOptic('');
+  };
+
+  const handleRemoveOptic = (index: number) => {
+    const newOptics = [...installedOptics];
+    newOptics.splice(index, 1);
+    updateNodeData(node.id, { optics: newOptics });
+  };
+
+  return (
+    <div style={{ padding: '12px', background: 'rgba(255, 152, 0, 0.05)', borderRadius: '6px', border: '1px solid rgba(255, 152, 0, 0.15)' }}>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#ff9800' }}>Hardware Specifications</h3>
+      {details ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', marginBottom: '16px' }}>
+          <div><strong>Model:</strong> {details.model}</div>
+          <div><strong>SKU:</strong> {details.sku}</div>
+          {details.ru && <div><strong>Form Factor:</strong> {details.ru} RU</div>}
+          {details.power && <div><strong>Power:</strong> {details.power}</div>}
+          {details.fans !== undefined && <div><strong>Fans:</strong> {details.fans}</div>}
+          {details.airflow && <div><strong>Airflow:</strong> {details.airflow}</div>}
+          {details.ports !== undefined && <div><strong>Base Ports:</strong> {details.ports}</div>}
+          {details.base_ports !== undefined && <div><strong>Base Ports:</strong> {details.base_ports}</div>}
+          {details.module_slots !== undefined && <div><strong>Module Slots:</strong> {details.module_slots}</div>}
+        </div>
+      ) : (
+        <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Specs not found for {sku}.</div>
+      )}
+
+      {supportedBoards.length > 0 && (
+        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Cage / Optic Validation</h4>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <select 
+              value={selectedBoard} 
+              onChange={e => { setSelectedBoard(e.target.value); setSelectedOptic(''); setErrorMsg(''); }}
+              style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+            >
+              <option value="">-- Select Board / Module --</option>
+              {supportedBoards.map(b => (
+                <option key={b.board} value={b.board}>{b.board}</option>
+              ))}
+            </select>
+
+            <select 
+              value={selectedOptic} 
+              onChange={e => { setSelectedOptic(e.target.value); setErrorMsg(''); }}
+              style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              disabled={!selectedBoard}
+            >
+              <option value="">-- Select Optic --</option>
+              {activeBoardObj?.supportedOptics.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+              {/* Added a test failure case to demonstrate validation */}
+              <option value="UNSUPPORTED_TEST_OPTIC">Unsupported Optic (Test Error)</option>
+            </select>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{ fontSize: '11px', color: '#ccc' }}>Qty:</label>
+              <input 
+                type="number" 
+                min={1} 
+                value={qty} 
+                onChange={e => setQty(parseInt(e.target.value) || 1)}
+                style={{ width: '40px', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              />
+              <button 
+                onClick={handleAddOptic}
+                style={{ flex: 1, padding: '4px 8px', background: 'rgba(255, 152, 0, 0.2)', border: '1px solid rgba(255, 152, 0, 0.4)', borderRadius: '3px', color: '#ffb74d', fontSize: '11px', cursor: 'pointer' }}
+              >
+                Add Optic
+              </button>
+            </div>
+
+            {errorMsg && (
+              <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(239, 83, 80, 0.1)', border: '1px solid rgba(239, 83, 80, 0.3)', borderRadius: '4px', color: '#ef5350', fontSize: '11px', whiteSpace: 'pre-wrap' }}>
+                ⚠️ {errorMsg}
+              </div>
+            )}
+          </div>
+
+          {installedOptics.length > 0 && (
+            <div style={{ marginTop: '12px' }}>
+              <h5 style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#ccc' }}>Installed Optics:</h5>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {installedOptics.map((opt, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1a1a1a', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', border: '1px solid #333' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: '#fff' }}>{opt.qty}x {opt.optic}</span>
+                      <span style={{ color: '#888' }}>{opt.board}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveOptic(i)}
+                      style={{ background: 'none', border: 'none', color: '#ef5350', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}
+                      title="Remove Optic"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Dashboard (no-node-selected) sub-component ───────────────────────────────
 
@@ -804,6 +953,9 @@ const ConfigPanel: React.FC = () => {
           )}
 
           {/* Node-type-specific panels */}
+          {selectedNode.type === NODE_TYPES.HARDWARE && (
+            <HardwareNodePanel node={selectedNode} />
+          )}
           {selectedNode.type === NODE_TYPES.INPUT && (
             <InputNodePanel node={selectedNode} onGenericChange={handleGenericChange} />
           )}

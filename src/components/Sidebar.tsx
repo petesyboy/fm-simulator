@@ -13,6 +13,7 @@
  */
 
 import React, { useState } from 'react';
+import { useStore } from '../store/store';
 import {
   AppIcon, MapIcon, GreenCircleIcon,
   SpanIcon, TapIcon, ErspanIcon, EastWestIcon, VmwareIcon,
@@ -57,10 +58,12 @@ const appsList = [
 // ─── Sidebar component ────────────────────────────────────────────────────────
 
 const Sidebar: React.FC = () => {
+  const { advancedMode, setAdvancedMode } = useStore();
   const [openSections, setOpenSections] = useState({
     demo: true,  // "Demonstration" section — expanded by default
     new: true,   // "New elements" section
     apps: true,  // "Applications" section — shows all 15 GigaSMART apps
+    advanced: true, // "Hardware" section for advanced mode
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -90,6 +93,18 @@ const Sidebar: React.FC = () => {
         <div className="elements-header">
           <span>TRAFFIC ELEMENTS</span>
           <span style={{ cursor: 'pointer', color: '#666' }}>|<br/>|</span>
+        </div>
+
+        <div style={{ padding: '10px 15px', borderBottom: '1px solid #333' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+            <input
+              type="checkbox"
+              checked={advancedMode}
+              onChange={(e) => setAdvancedMode(e.target.checked)}
+              style={{ marginRight: '8px' }}
+            />
+            Advanced Mode (SE)
+          </label>
         </div>
 
         {/* ── Collapsible Section: Demonstration ── */}
@@ -245,6 +260,50 @@ const Sidebar: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* ── Collapsible Section: Hardware (Advanced Mode) ── */}
+        {advancedMode && (
+          <div className="tree-section">
+            <div className="tree-header" onClick={() => toggleSection('advanced')}>
+              <span className={`chevron ${openSections.advanced ? 'open' : ''}`}>▼</span>
+              <span>Physical Hardware (SE)</span>
+              <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>⚙️</span>
+            </div>
+            {openSections.advanced && (
+              <div className="tree-content" style={{ maxHeight: '550px', overflowY: 'auto' }}>
+                <div className="demo-group-label" style={{ padding: '6px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TAPS</div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'TAP-M100T', { configType: 'Hardware', model: 'TAP-M100T', sku: 'TAP-M100T' })}>
+                  <TapIcon size={18} />
+                  <span>TAP-M100T (1/2 RU)</span>
+                </div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'TAP-M200T', { configType: 'Hardware', model: 'TAP-M200T', sku: 'TAP-M200T' })}>
+                  <TapIcon size={18} />
+                  <span>TAP-M200T (1 RU)</span>
+                </div>
+                
+                <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TA SERIES</div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-TA25', { configType: 'Hardware', model: 'GigaVUE-TA25', sku: 'TA25-BASE' })}>
+                  <GreenCircleIcon size={18} />
+                  <span>GigaVUE-TA25</span>
+                </div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-TA200', { configType: 'Hardware', model: 'GigaVUE-TA200', sku: 'TA200-BASE' })}>
+                  <GreenCircleIcon size={18} />
+                  <span>GigaVUE-TA200</span>
+                </div>
+                
+                <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>HC SERIES</div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-HC1', { configType: 'Hardware', model: 'GigaVUE-HC1', sku: 'HC1-BASE' })}>
+                  <MapIcon size={18} />
+                  <span>GigaVUE-HC1</span>
+                </div>
+                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-HC3', { configType: 'Hardware', model: 'GigaVUE-HC3', sku: 'HC3-BASE' })}>
+                  <MapIcon size={18} />
+                  <span>GigaVUE-HC3</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
       </aside>
     </>

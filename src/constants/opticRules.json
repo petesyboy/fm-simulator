@@ -1,0 +1,228 @@
+{
+  "GigaVUE-HC1": {
+    "HC1-X12G4 (Main board)": [
+      "SFP (10M/100M)",
+      "SFP (100M)",
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC1-D25A24": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-X12": [
+      "SFP (100M)",
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-Q04X08": [
+      "SFP (10M/100M)",
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-HC1-Plus": {
+    "HC1P-C04X08 (Main Board)": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-Q04X08": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)",
+      "Cable"
+    ],
+    "BPS-HC1-D25A24": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-X12": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)"
+    ]
+  },
+  "GigaVUE-HCT": {
+    "HCT-C02 (Main Board)": [
+      "QSFP+ (40Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-Q04X08": [
+      "SFP (1Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-X12": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC1-D25A24": [
+      "SFP (1Gb)",
+      "Cable"
+    ],
+    "PRT-HC1-G12": [
+      "SFP (10M/100M)",
+      "SFP (100M)",
+      "SFP (1Gb)"
+    ]
+  },
+  "GigaVUE-HC2 CCv1                                                 Final GVOS Version : 6.5.00": {
+    "PRT-HC0-X24": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC0-Q06": [
+      "QSFP+ (40Gb)"
+    ],
+    "BPS-HC0-D25A4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "QSFP28 (100Gb)",
+      "Cable"
+    ],
+    "BPS-HC0-D25B4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC0-D35C4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "SMT-HC0-Q02X08": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ],
+    "SMT-HC0-X16": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-HC2 CCv2                                                  Final GVOS Version : 6.5.00": {
+    "PRT-HC0-X24": [
+      "SFP (100M)",
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC0-Q06": [
+      "QSFP+ (40Gb)"
+    ],
+    "BPS-HC0-D25A4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC0-D25B4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC0-D35C4G": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC0-Q25A28": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "SMT-HC0-X16": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "SMT-HC0-Q02X08": [
+      "SFP (100M)",
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ],
+    "PRT-HC0-C02": [
+      "QSFP28 (100Gb)"
+    ]
+  },
+  "GigaVUE-HC3 CCv1 \nFinal GVOS Version : 5.16.00": {
+    "PRT-HC3-X24": [
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "PRT-HC3-C08Q16": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ],
+    "SMT-HC3-C05": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ],
+    "BPS-HC3-C25F2G": [
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC3-C35F2G": [
+      "SFP+ (10Gb)",
+      "Cable"
+    ],
+    "BPS-HC3-Q35F2G": [
+      "SFP+ (10Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-HC3 CCv2": {
+    "PRT-HC3-X24": [
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ],
+    "PRT-HC3-C08Q08": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ],
+    "SMT-HC3-C05": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ],
+    "SMT-HC3-C08": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ],
+    "BPS-HC3-C25F2G": [
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ],
+    "BPS-HC3-C35F2G": [
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ],
+    "BPS-HC3-Q35F2G": [
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ],
+    "PRT-HC3-C16": [
+      "QSFP+ (40Gb)",
+      "QSFP28 (100Gb)"
+    ]
+  }
+}
