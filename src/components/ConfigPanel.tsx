@@ -233,6 +233,31 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Specs not found for {sku}.</div>
       )}
 
+      {model?.includes('TAP') && (
+        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px', marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>TAP Settings</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ fontSize: '11px', color: '#ccc' }}>Tapped Links:</label>
+            <input 
+              type="number" 
+              min={1} 
+              max={6}
+              value={node.data.tappedLinksCount ?? 1} 
+              onChange={e => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val) || val < 1) val = 1;
+                if (val > 6) val = 6;
+                updateNodeData(node.id, { tappedLinksCount: val });
+              }}
+              style={{ width: '60px', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+            />
+          </div>
+          <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>
+            Specifies the number of links this TAP is monitoring (1-6).
+          </div>
+        </div>
+      )}
+
       {renderModuleSlots()}
 
       {availableOpticBoards.length > 0 && (
@@ -318,7 +343,7 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
             incomingTapEdges.forEach(e => {
               const sourceNode = nodes.find(n => n.id === e.source);
               if (sourceNode?.data?.model?.includes('TAP')) {
-                tappedLinks += 1;
+                tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
               }
             });
             
