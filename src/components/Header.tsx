@@ -95,6 +95,13 @@ const BomModal: React.FC<{
         if (!bom[optKey]) bom[optKey] = { model: opt.optic, sku: opt.optic, qty: 0, type: 'Optic/Transceiver' };
         bom[optKey].qty += opt.qty;
       });
+
+      const installedBoards = (n.data?.installedBoards as Record<string, string>) || {};
+      Object.values(installedBoards).forEach(boardName => {
+        const boardKey = `BOARD-${boardName}`;
+        if (!bom[boardKey]) bom[boardKey] = { model: boardName, sku: boardName, qty: 0, type: 'Module/Board' };
+        bom[boardKey].qty += 1;
+      });
     }
   });
   

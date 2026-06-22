@@ -118,6 +118,8 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
   const installedOptics = (node.data?.optics as { board: string, optic: string, qty: number }[]) || [];
   const installedBoards = (node.data?.installedBoards as Record<string, string>) || {};
   const updateNodeData = useStore(state => state.updateNodeData);
+  const edges = useStore(state => state.edges);
+  const nodes = useStore(state => state.nodes);
 
   const [selectedOpticBoard, setSelectedOpticBoard] = useState('');
   const [selectedOptic, setSelectedOptic] = useState('');
@@ -309,6 +311,30 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
               </div>
             </div>
           )}
+
+          {(() => {
+            const incomingTapEdges = edges.filter(e => e.target === node.id);
+            let tappedLinks = 0;
+            incomingTapEdges.forEach(e => {
+              const sourceNode = nodes.find(n => n.id === e.source);
+              if (sourceNode?.data?.model?.includes('TAP')) {
+                tappedLinks += 1;
+              }
+            });
+            
+            if (tappedLinks > 0) {
+              const totalOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
+              const requiredOptics = tappedLinks * 2;
+              if (totalOptics < requiredOptics) {
+                return (
+                  <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)', borderRadius: '4px', color: '#ffb74d', fontSize: '11px' }}>
+                    <strong>⚠️ Attention:</strong> You have <strong>{tappedLinks}</strong> connected TAP link(s). Every tapped link produces two outputs (northbound and southbound). Therefore, a minimum of <strong>{requiredOptics}</strong> optics must be installed to support this setup.
+                  </div>
+                );
+              }
+            }
+            return null;
+          })()}
         </div>
       )}
     </div>

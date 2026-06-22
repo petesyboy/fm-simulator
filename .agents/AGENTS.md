@@ -5,3 +5,7 @@
 
 ## Commit Messages
 - **CRITICAL RULE**: After each change, give the user a summary for a commit message.
+
+
+## Hardware Node Rules
+- **CRITICAL RULE**: Every tapped link produces two outputs. A simplex cable is required to go into an SFP or QSFP depending upon fiber type and speed on a TA or HC unit. Because traffic is northbound and southbound, there are two optics required for each tapped link.
