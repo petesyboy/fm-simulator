@@ -36,6 +36,51 @@
       "split_ratio": "50/50",
       "fiber_type": "Singlemode",
       "ports": 2
+    },
+    {
+      "model": "TAP-M251T",
+      "sku": "TAP-M251T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M253T",
+      "sku": "TAP-M253T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M271T",
+      "sku": "TAP-M271T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M273T",
+      "sku": "TAP-M273T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M451T",
+      "sku": "TAP-M451T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M453T",
+      "sku": "TAP-M453T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M471T",
+      "sku": "TAP-M471T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M473T",
+      "sku": "TAP-M473T",
+      "type": "module"
+    },
+    {
+      "model": "TAP-M506T",
+      "sku": "TAP-M506T",
+      "type": "module"
     }
   ],
   "ta_series": [
@@ -123,6 +168,15 @@
       "airflow": "Front-to-Rear",
       "base_ports": 0,
       "module_slots": 4
+    },
+    {
+      "model": "GigaVUE-HCT",
+      "sku": "HCT-BASE",
+      "power": "150W",
+      "fans": 4,
+      "airflow": "Front-to-Rear",
+      "base_ports": 0,
+      "module_slots": 2
     }
   ]
 }

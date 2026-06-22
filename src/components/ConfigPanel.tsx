@@ -116,9 +116,10 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
   const model = node.data?.model as string;
   const sku = node.data?.sku as string;
   const installedOptics = (node.data?.optics as { board: string, optic: string, qty: number }[]) || [];
+  const installedBoards = (node.data?.installedBoards as Record<string, string>) || {};
   const updateNodeData = useStore(state => state.updateNodeData);
 
-  const [selectedBoard, setSelectedBoard] = useState('');
+  const [selectedOpticBoard, setSelectedOpticBoard] = useState('');
   const [selectedOptic, setSelectedOptic] = useState('');
   const [qty, setQty] = useState(1);
   const [errorMsg, setErrorMsg] = useState('');
@@ -130,23 +131,46 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
   else if (model?.includes('HC')) details = hardwareCatalogue.hc_series.find(t => t.sku === sku);
 
   const supportedBoards = getSupportedBoards(model || '');
-  const activeBoardObj = supportedBoards.find(b => b.board === selectedBoard);
+  
+  // Determine available boards for optics: Main board / Base Ports + explicitly installed slot boards
+  const availableOpticBoards = supportedBoards.filter(b => 
+    b.board.toLowerCase().includes('main') || 
+    b.board.toLowerCase().includes('base') || 
+    Object.values(installedBoards).includes(b.board)
+  );
+
+  const activeOpticBoardObj = availableOpticBoards.find(b => b.board === selectedOpticBoard);
+
+  const handleBoardSelect = (slotIndex: number, boardName: string) => {
+    const newBoards = { ...installedBoards };
+    if (boardName) {
+      newBoards[slotIndex] = boardName;
+    } else {
+      delete newBoards[slotIndex];
+    }
+    updateNodeData(node.id, { installedBoards: newBoards });
+    
+    // Reset selected optic board if the board we had selected is no longer installed
+    if (selectedOpticBoard && !Object.values(newBoards).includes(selectedOpticBoard) && !selectedOpticBoard.toLowerCase().includes('main') && !selectedOpticBoard.toLowerCase().includes('base')) {
+      setSelectedOpticBoard('');
+      setSelectedOptic('');
+    }
+  };
 
   const handleAddOptic = () => {
     setErrorMsg('');
-    if (!selectedBoard || !selectedOptic) {
+    if (!selectedOpticBoard || !selectedOptic) {
       setErrorMsg('Please select a board and an optic.');
       return;
     }
-    const validation = validateOptic(model, selectedBoard, selectedOptic);
+    const validation = validateOptic(model, selectedOpticBoard, selectedOptic);
     if (!validation.valid) {
       setErrorMsg(validation.message || 'Invalid optic combination.');
       return;
     }
 
-    const newOptics = [...installedOptics, { board: selectedBoard, optic: selectedOptic, qty }];
+    const newOptics = [...installedOptics, { board: selectedOpticBoard, optic: selectedOptic, qty }];
     updateNodeData(node.id, { optics: newOptics });
-    // Reset selection after add
     setSelectedOptic('');
   };
 
@@ -154,6 +178,38 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
     const newOptics = [...installedOptics];
     newOptics.splice(index, 1);
     updateNodeData(node.id, { optics: newOptics });
+  };
+
+  const renderModuleSlots = () => {
+    if (!details?.module_slots) return null;
+    
+    const slots = [];
+    // Only show installable boards (exclude main/base)
+    const installableBoards = supportedBoards.filter(b => !b.board.toLowerCase().includes('main') && !b.board.toLowerCase().includes('base'));
+    
+    for (let i = 1; i <= details.module_slots; i++) {
+      slots.push(
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
+          <label style={{ fontSize: '11px', color: '#ccc' }}>Slot {i}</label>
+          <select 
+            value={installedBoards[i] || ''} 
+            onChange={e => handleBoardSelect(i, e.target.value)}
+            style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+          >
+            <option value="">-- Empty Slot --</option>
+            {installableBoards.map(b => (
+              <option key={b.board} value={b.board}>{b.board}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    return (
+      <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
+        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Module Slots</h4>
+        {slots}
+      </div>
+    );
   };
 
   return (
@@ -175,18 +231,20 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Specs not found for {sku}.</div>
       )}
 
-      {supportedBoards.length > 0 && (
-        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px' }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Cage / Optic Validation</h4>
+      {renderModuleSlots()}
+
+      {availableOpticBoards.length > 0 && (
+        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Install Optics</h4>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <select 
-              value={selectedBoard} 
-              onChange={e => { setSelectedBoard(e.target.value); setSelectedOptic(''); setErrorMsg(''); }}
+              value={selectedOpticBoard} 
+              onChange={e => { setSelectedOpticBoard(e.target.value); setSelectedOptic(''); setErrorMsg(''); }}
               style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
             >
-              <option value="">-- Select Board / Module --</option>
-              {supportedBoards.map(b => (
+              <option value="">-- Select Target Cage --</option>
+              {availableOpticBoards.map(b => (
                 <option key={b.board} value={b.board}>{b.board}</option>
               ))}
             </select>
@@ -195,10 +253,10 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
               value={selectedOptic} 
               onChange={e => { setSelectedOptic(e.target.value); setErrorMsg(''); }}
               style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
-              disabled={!selectedBoard}
+              disabled={!selectedOpticBoard}
             >
               <option value="">-- Select Optic --</option>
-              {activeBoardObj?.supportedOptics.map(opt => (
+              {activeOpticBoardObj?.supportedOptics.map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
               {/* Added a test failure case to demonstrate validation */}

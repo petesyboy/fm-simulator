@@ -224,5 +224,58 @@
       "QSFP+ (40Gb)",
       "QSFP28 (100Gb)"
     ]
+  },
+  "GigaVUE-TA25": {
+    "Base Ports": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA25E": {
+    "Base Ports": [
+      "SFP (1Gb)",
+      "SFP+ (10Gb)",
+      "SFP28 (25Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA100": {
+    "Base Ports": [
+      "QSFP28 (100Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA200": {
+    "Base Ports": [
+      "QSFP28 (100Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA200E": {
+    "Base Ports": [
+      "QSFP28 (100Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA400": {
+    "Base Ports": [
+      "QSFP-DD (400Gb)",
+      "QSFP28 (100Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
+  },
+  "GigaVUE-TA400E": {
+    "Base Ports": [
+      "QSFP-DD (400Gb)",
+      "QSFP28 (100Gb)",
+      "QSFP+ (40Gb)",
+      "Cable"
+    ]
   }
 }

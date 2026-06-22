@@ -20,6 +20,7 @@ import {
   PacketToolIcon, MetadataToolIcon, S3StorageIcon, WiresharkIcon,
 } from './Icons';
 import { NODE_TYPES, ACTION_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
+import hardwareCatalogue from '../constants/hardwareCatalogue.json';
 
 // Re-export icons so existing imports of these from 'Sidebar' continue to work.
 // Once all callers are updated to import from Icons.tsx directly these re-exports
@@ -272,34 +273,28 @@ const Sidebar: React.FC = () => {
             {openSections.advanced && (
               <div className="tree-content" style={{ maxHeight: '550px', overflowY: 'auto' }}>
                 <div className="demo-group-label" style={{ padding: '6px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TAPS</div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'TAP-M100T', { configType: 'Hardware', model: 'TAP-M100T', sku: 'TAP-M100T' })}>
-                  <TapIcon size={18} />
-                  <span>TAP-M100T (1/2 RU)</span>
-                </div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'TAP-M200T', { configType: 'Hardware', model: 'TAP-M200T', sku: 'TAP-M200T' })}>
-                  <TapIcon size={18} />
-                  <span>TAP-M200T (1 RU)</span>
-                </div>
+                {hardwareCatalogue.taps.map((item) => (
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku })}>
+                    <TapIcon size={18} />
+                    <span>{item.model} {item.ru ? `(${item.ru < 1 ? '1/2' : item.ru} RU)` : ''}</span>
+                  </div>
+                ))}
                 
                 <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TA SERIES</div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-TA25', { configType: 'Hardware', model: 'GigaVUE-TA25', sku: 'TA25-BASE' })}>
-                  <GreenCircleIcon size={18} />
-                  <span>GigaVUE-TA25</span>
-                </div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-TA200', { configType: 'Hardware', model: 'GigaVUE-TA200', sku: 'TA200-BASE' })}>
-                  <GreenCircleIcon size={18} />
-                  <span>GigaVUE-TA200</span>
-                </div>
+                {hardwareCatalogue.ta_series.map((item) => (
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku })}>
+                    <GreenCircleIcon size={18} />
+                    <span>{item.model}</span>
+                  </div>
+                ))}
                 
                 <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>HC SERIES</div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-HC1', { configType: 'Hardware', model: 'GigaVUE-HC1', sku: 'HC1-BASE' })}>
-                  <MapIcon size={18} />
-                  <span>GigaVUE-HC1</span>
-                </div>
-                <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, 'GigaVUE-HC3', { configType: 'Hardware', model: 'GigaVUE-HC3', sku: 'HC3-BASE' })}>
-                  <MapIcon size={18} />
-                  <span>GigaVUE-HC3</span>
-                </div>
+                {hardwareCatalogue.hc_series.map((item) => (
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku })}>
+                    <MapIcon size={18} />
+                    <span>{item.model}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
