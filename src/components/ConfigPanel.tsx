@@ -168,7 +168,7 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
       setErrorMsg('Please select a board and an optic.');
       return;
     }
-    const validation = validateOptic(model, selectedOpticBoard, selectedOptic);
+    const validation = validateOptic(model, targetBoard, selectedOptic);
     if (!validation.valid) {
       setErrorMsg(validation.message || 'Invalid optic combination.');
       return;

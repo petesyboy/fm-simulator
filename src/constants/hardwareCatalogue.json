@@ -104,7 +104,8 @@
       "power": "400W",
       "fans": 8,
       "airflow": "Front-to-Rear",
-      "ports": 48
+      "ports": 48,
+      "image": "/hardware-icons/GigaVUE-TA25.png"
     },
     {
       "model": "GigaVUE-TA25E",
@@ -112,15 +113,8 @@
       "power": "400W",
       "fans": 4,
       "airflow": "Front-to-Rear",
-      "ports": 48
-    },
-    {
-      "model": "GigaVUE-TA100",
-      "sku": "TA100-BASE",
-      "power": "500W",
-      "fans": 4,
-      "airflow": "Front-to-Rear",
-      "ports": 32
+      "ports": 48,
+      "image": "/hardware-icons/GigaVUE-TA25.png"
     },
     {
       "model": "GigaVUE-TA200",
@@ -128,7 +122,8 @@
       "power": "1069W",
       "fans": 8,
       "airflow": "Front-to-Rear",
-      "ports": 128
+      "ports": 128,
+      "image": "/hardware-icons/GigaVUE-TA200.png"
     },
     {
       "model": "GigaVUE-TA200E",
@@ -136,7 +131,8 @@
       "power": "800W",
       "fans": 8,
       "airflow": "Front-to-Rear",
-      "ports": 128
+      "ports": 128,
+      "image": "/hardware-icons/GigaVUE-TA200.png"
     },
     {
       "model": "GigaVUE-TA400",
@@ -144,7 +140,8 @@
       "power": "1000W",
       "fans": 7,
       "airflow": "Front-to-Rear",
-      "ports": 32
+      "ports": 32,
+      "image": "/hardware-icons/GigaVUE-TA400.png"
     },
     {
       "model": "GigaVUE-TA400E",
@@ -152,7 +149,8 @@
       "power": "1294W",
       "fans": 6,
       "airflow": "Front-to-Rear",
-      "ports": 32
+      "ports": 32,
+      "image": "/hardware-icons/GigaVUE-TA400.png"
     }
   ],
   "hc_series": [
@@ -163,7 +161,8 @@
       "fans": 6,
       "airflow": "Front-to-Rear",
       "base_ports": 12,
-      "module_slots": 2
+      "module_slots": 2,
+      "image": "/hardware-icons/GigaVUE-HC1.png"
     },
     {
       "model": "GigaVUE-HC1-Plus",
@@ -172,7 +171,8 @@
       "fans": 12,
       "airflow": "Front-to-Rear",
       "base_ports": 24,
-      "module_slots": 2
+      "module_slots": 2,
+      "image": "/hardware-icons/GigaVUE-HC1-Plus.png"
     },
     {
       "model": "GigaVUE-HC3",
@@ -181,7 +181,8 @@
       "fans": 10,
       "airflow": "Front-to-Rear",
       "base_ports": 0,
-      "module_slots": 4
+      "module_slots": 4,
+      "image": "/hardware-icons/GigaVUE-HC3.png"
     },
     {
       "model": "GigaVUE-HCT",
@@ -190,7 +191,8 @@
       "fans": 4,
       "airflow": "Front-to-Rear",
       "base_ports": 0,
-      "module_slots": 2
+      "module_slots": 2,
+      "image": "/hardware-icons/GigaVUE-HCT.png"
     }
   ]
 }

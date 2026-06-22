@@ -441,10 +441,16 @@ export const GroupNode: React.FC<NodeProps> = ({ data, selected }) => {
 export const HardwareNode: React.FC<NodeProps> = ({ data, selected }) => {
   const model = (data.model as string) || 'Hardware';
   const sku = (data.sku as string) || '';
+  const image = (data.image as string) || '';
   
-  let iconComponent = <GreenCircleIcon size={20} />;
-  if (model.includes('TAP')) iconComponent = <TapIcon size={20} />;
-  else if (model.includes('HC')) iconComponent = <MapIcon size={20} />;
+  let iconComponent = image ? (
+    <img src={image} alt={model} style={{ height: '32px', objectFit: 'contain' }} />
+  ) : <GreenCircleIcon size={20} />;
+  
+  if (!image) {
+    if (model.includes('TAP')) iconComponent = <TapIcon size={20} />;
+    else if (model.includes('HC')) iconComponent = <MapIcon size={20} />;
+  }
 
   return (
     <>
