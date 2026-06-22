@@ -141,7 +141,9 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
     Object.values(installedBoards).includes(b.board)
   );
 
-  const activeOpticBoardObj = availableOpticBoards.find(b => b.board === selectedOpticBoard);
+  const activeOpticBoardObj = availableOpticBoards.length === 1 
+    ? availableOpticBoards[0] 
+    : availableOpticBoards.find(b => b.board === selectedOpticBoard);
 
   const handleBoardSelect = (slotIndex: number, boardName: string) => {
     const newBoards = { ...installedBoards };
@@ -161,7 +163,8 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
 
   const handleAddOptic = () => {
     setErrorMsg('');
-    if (!selectedOpticBoard || !selectedOptic) {
+    const targetBoard = availableOpticBoards.length === 1 ? availableOpticBoards[0].board : selectedOpticBoard;
+    if (!targetBoard || !selectedOptic) {
       setErrorMsg('Please select a board and an optic.');
       return;
     }
@@ -171,9 +174,11 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
       return;
     }
 
-    const newOptics = [...installedOptics, { board: selectedOpticBoard, optic: selectedOptic, qty }];
+    const newOpticObj = { board: targetBoard, optic: selectedOptic, qty };
+    const newOptics = [...installedOptics, newOpticObj];
     updateNodeData(node.id, { optics: newOptics });
     setSelectedOptic('');
+    setQty(1);
   };
 
   const handleRemoveOptic = (index: number) => {
@@ -268,22 +273,28 @@ const HardwareNodePanel: React.FC<{ node: CustomNode }> = ({ node }) => {
           <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Install Optics</h4>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <select 
-              value={selectedOpticBoard} 
-              onChange={e => { setSelectedOpticBoard(e.target.value); setSelectedOptic(''); setErrorMsg(''); }}
-              style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
-            >
-              <option value="">-- Select Target Cage --</option>
-              {availableOpticBoards.map(b => (
-                <option key={b.board} value={b.board}>{b.board}</option>
-              ))}
-            </select>
+            {availableOpticBoards.length > 1 ? (
+              <select 
+                value={selectedOpticBoard} 
+                onChange={e => { setSelectedOpticBoard(e.target.value); setSelectedOptic(''); setErrorMsg(''); }}
+                style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              >
+                <option value="">-- Select Target Cage --</option>
+                {availableOpticBoards.map(b => (
+                  <option key={b.board} value={b.board}>{b.board}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ fontSize: '11px', color: '#aaa', padding: '4px 0' }}>
+                Target Cage: <strong style={{ color: '#fff' }}>{availableOpticBoards[0]?.board || 'Base Ports'}</strong>
+              </div>
+            )}
 
             <select 
               value={selectedOptic} 
               onChange={e => { setSelectedOptic(e.target.value); setErrorMsg(''); }}
               style={{ fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
-              disabled={!selectedOpticBoard}
+              disabled={availableOpticBoards.length === 0 || (availableOpticBoards.length > 1 && !selectedOpticBoard)}
             >
               <option value="">-- Select Optic --</option>
               {activeOpticBoardObj?.supportedOptics.map(opt => (
