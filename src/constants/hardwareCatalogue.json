@@ -98,15 +98,7 @@
     }
   ],
   "ta_series": [
-    {
-      "model": "GigaVUE-TA25",
-      "sku": "TA25-BASE",
-      "power": "400W",
-      "fans": 8,
-      "airflow": "Front-to-Rear",
-      "ports": 48,
-      "image": "./hardware-icons/GigaVUE-TA25.png"
-    },
+
     {
       "model": "GigaVUE-TA25E",
       "sku": "TA25E-BASE",
