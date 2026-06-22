@@ -5,21 +5,24 @@
       "sku": "TAP-M100T",
       "ru": 0.5,
       "type": "chassis",
-      "max_modules": 3
+      "max_modules": 3,
+      "max_links": 18
     },
     {
       "model": "TAP-M200T",
       "sku": "TAP-M200T",
       "ru": 1,
       "type": "chassis",
-      "max_modules": 6
+      "max_modules": 6,
+      "max_links": 36
     },
     {
       "model": "TAP-M202ULT",
       "sku": "TAP-M202ULT",
       "ru": 1,
       "type": "chassis",
-      "max_modules": 2
+      "max_modules": 2,
+      "max_links": 8
     },
     {
       "model": "TAP-M251ULT",
@@ -27,7 +30,8 @@
       "type": "module",
       "split_ratio": "50/50",
       "fiber_type": "Multimode",
-      "ports": 4
+      "ports": 4,
+      "max_links": 4
     },
     {
       "model": "TAP-M253ULT",
@@ -35,52 +39,62 @@
       "type": "module",
       "split_ratio": "50/50",
       "fiber_type": "Singlemode",
-      "ports": 2
+      "ports": 2,
+      "max_links": 2
     },
     {
       "model": "TAP-M251T",
       "sku": "TAP-M251T",
-      "type": "module"
+      "type": "module",
+      "max_links": 6
     },
     {
       "model": "TAP-M253T",
       "sku": "TAP-M253T",
-      "type": "module"
+      "type": "module",
+      "max_links": 6
     },
     {
       "model": "TAP-M271T",
       "sku": "TAP-M271T",
-      "type": "module"
+      "type": "module",
+      "max_links": 6
     },
     {
       "model": "TAP-M273T",
       "sku": "TAP-M273T",
-      "type": "module"
+      "type": "module",
+      "max_links": 6
     },
     {
       "model": "TAP-M451T",
       "sku": "TAP-M451T",
-      "type": "module"
+      "type": "module",
+      "max_links": 3
     },
     {
       "model": "TAP-M453T",
       "sku": "TAP-M453T",
-      "type": "module"
+      "type": "module",
+      "max_links": 3
     },
     {
       "model": "TAP-M471T",
       "sku": "TAP-M471T",
-      "type": "module"
+      "type": "module",
+      "max_links": 3
     },
     {
       "model": "TAP-M473T",
       "sku": "TAP-M473T",
-      "type": "module"
+      "type": "module",
+      "max_links": 3
     },
     {
       "model": "TAP-M506T",
       "sku": "TAP-M506T",
-      "type": "module"
+      "type": "module",
+      "max_links": 4
     }
   ],
   "ta_series": [
