@@ -12,7 +12,7 @@
  *   of bare magic strings.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/store';
 import {
   AppIcon, MapIcon, GreenCircleIcon,
@@ -67,9 +67,44 @@ const Sidebar: React.FC = () => {
     advanced: true, // "Hardware" section for advanced mode
   });
 
+  const [width, setWidth] = useState(250); // increased default width to 250px to fit names better
+  const [isResizing, setIsResizing] = useState(false);
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const aside = document.querySelector('.sidebar-elements');
+      if (aside) {
+        const rect = aside.getBoundingClientRect();
+        const newWidth = e.clientX - rect.left;
+        if (newWidth >= 180 && newWidth <= 450) {
+          setWidth(newWidth);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   /**
    * Attach drag data to the event so CanvasArea.onDrop can read it.
@@ -90,10 +125,10 @@ const Sidebar: React.FC = () => {
   return (
     <>
       {/* Inner Elements Tree Sidebar */}
-      <aside className="sidebar-elements">
+      <aside className="sidebar-elements" style={{ width: `${width}px`, position: 'relative' }}>
         <div className="elements-header">
           <span>TRAFFIC ELEMENTS</span>
-          <span style={{ cursor: 'pointer', color: '#666' }}>|<br/>|</span>
+          <span style={{ color: '#555', fontSize: '10px' }}>◄ ►</span>
         </div>
 
         <div style={{ padding: '10px 15px', borderBottom: '1px solid #333' }}>
@@ -300,6 +335,12 @@ const Sidebar: React.FC = () => {
           </div>
         )}
 
+        {/* Resizing Handle */}
+        <div 
+          onMouseDown={handleMouseDown}
+          className={`sidebar-resize-handle ${isResizing ? 'resizing' : ''}`}
+          title="Drag to resize elements sidebar"
+        />
       </aside>
     </>
   );
