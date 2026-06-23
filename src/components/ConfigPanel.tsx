@@ -208,10 +208,18 @@ const HardwareNodePanel: React.FC<{
   } => {
     const caps = { ports1G: 0, ports10G: 0, ports25G: 0, ports40G: 0, ports100G: 0 };
     const name = boardName.toLowerCase();
+    const modelLower = String(model || '').toLowerCase();
     
-    if (name.includes('main') || name.includes('base ports') || name.includes('hc1-x12g4') || name.includes('hc1p-c04x08')) {
+    if (modelLower.includes('ta25')) {
+      caps.ports100G = 8;
+      caps.ports40G = 8;
+      caps.ports25G = 48;
+      caps.ports10G = 48;
+      caps.ports1G = 48;
+    } else if (name.includes('main') || name.includes('base ports') || name.includes('hc1-x12g4') || name.includes('hc1p-c04x08')) {
       if (isPlus) {
         caps.ports100G = 4;
+        caps.ports40G = 4;
         caps.ports25G = 8;
         caps.ports10G = 8;
         caps.ports1G = 8;
@@ -228,6 +236,7 @@ const HardwareNodePanel: React.FC<{
     } else if (name.includes('prt-hc1-q04x08') || name.includes('q04x08')) {
       if (isPlus) {
         caps.ports100G = 4;
+        caps.ports40G = 4;
         caps.ports25G = 8;
         caps.ports10G = 8;
         caps.ports1G = 8;
@@ -501,7 +510,7 @@ const HardwareNodePanel: React.FC<{
 
       {renderModuleSlots()}
 
-      {String(model || '').includes('HC') && (total100G > 0 || total40G > 0 || total25G > 0 || total10G > 0 || total1G > 0) && (
+      {!model?.includes('TAP') && (total100G > 0 || total40G > 0 || total25G > 0 || total10G > 0 || total1G > 0) && (
         <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
           <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Chassis Cage Capacity</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', textAlign: 'center', background: '#111', padding: '8px', borderRadius: '4px', border: '1px solid #333' }}>
