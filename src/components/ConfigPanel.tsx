@@ -130,6 +130,32 @@ const HardwareNodePanel: React.FC<{
   const [selectedOptic, setSelectedOptic] = useState('');
   const [qtyStr, setQtyStr] = useState('1');
   const [errorMsg, setErrorMsg] = useState('');
+  const [termDurationStr, setTermDurationStr] = useState((node.data?.termDurationOverride as string) || '');
+  
+  const disableDcWarnings = useStore(state => state.disableDcWarnings);
+
+  const handleTermBlur = () => {
+    if (!termDurationStr) {
+      updateNodeData(node.id, { termDurationOverride: undefined });
+      return;
+    }
+    let parsed = parseInt(termDurationStr, 10);
+    if (isNaN(parsed) || parsed < 1) parsed = 1;
+    if (parsed > 120) parsed = 120;
+    setTermDurationStr(parsed.toString());
+    updateNodeData(node.id, { termDurationOverride: parsed.toString() });
+  };
+
+  const handlePowerChange = (power: string) => {
+    if (power === 'DC' && !disableDcWarnings) {
+      const confirm = window.confirm("You have selected a DC-powered appliance. Are you sure you need DC power?");
+      if (!confirm) {
+        updateNodeData(node.id, { powerSupply: 'AC' });
+        return;
+      }
+    }
+    updateNodeData(node.id, { powerSupply: power });
+  };
 
   let details: any = null;
 
@@ -244,6 +270,67 @@ const HardwareNodePanel: React.FC<{
         </div>
       ) : (
         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Specs not found for {sku}.</div>
+      )}
+
+      {/* Appliance Configuration */}
+      {!model?.includes('TAP') && (
+        <div style={{ marginBottom: '16px', padding: '10px', background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#ccc', textTransform: 'uppercase' }}>Appliance Configuration</h4>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>License Mode Override</label>
+              <select
+                value={(node.data?.licenseModeOverride as string) || 'default'}
+                onChange={(e) => updateNodeData(node.id, { licenseModeOverride: e.target.value })}
+                style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              >
+                <option value="default">Project Default</option>
+                <option value="HTL">Hybrid Term Licensing (HTL)</option>
+                <option value="Perpetual">Perpetual</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Term Duration (Months)</label>
+              <input
+                type="number"
+                placeholder="Project Default"
+                value={termDurationStr}
+                onChange={(e) => setTermDurationStr(e.target.value)}
+                onBlur={handleTermBlur}
+                style={{ width: '100%', boxSizing: 'border-box', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Power Supply</label>
+              <select
+                value={(node.data?.powerSupply as string) || 'AC'}
+                onChange={(e) => handlePowerChange(e.target.value)}
+                style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+              >
+                <option value="AC">AC Power</option>
+                <option value="DC">DC Power</option>
+              </select>
+            </div>
+
+            {model?.includes('TA') && (
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>Software Port Capacity</label>
+                <select
+                  value={(node.data?.portCapacity as string) || 'Full'}
+                  onChange={(e) => updateNodeData(node.id, { portCapacity: e.target.value })}
+                  style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+                >
+                  <option value="Full">Full Capacity</option>
+                  <option value="Half">Half Capacity</option>
+                  <option value="Quarter">Quarter Capacity</option>
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {model?.includes('TAP') && (() => {
@@ -448,6 +535,13 @@ const DashboardPanel: React.FC<{ isRunning: boolean }> = ({ isRunning }) => {
   const nodeMetrics     = useStore((state) => state.nodeMetrics);
   const uniqueEgressBps = useStore((state) => state.uniqueEgressBps);
 
+  const projectLicenseMode = useStore((state) => state.projectLicenseMode);
+  const setProjectLicenseMode = useStore((state) => state.setProjectLicenseMode);
+  const defaultTermDuration = useStore((state) => state.defaultTermDuration);
+  const setDefaultTermDuration = useStore((state) => state.setDefaultTermDuration);
+  const disableDcWarnings = useStore((state) => state.disableDcWarnings);
+  const setDisableDcWarnings = useStore((state) => state.setDisableDcWarnings);
+
   // Aggregate ingest (from inputNodes)
   let totalIngest = 0;
   nodes.forEach((n) => {
@@ -461,6 +555,14 @@ const DashboardPanel: React.FC<{ isRunning: boolean }> = ({ isRunning }) => {
   const reductionRaw     = Math.max(0, totalIngest - totalEgress);
   const reductionPercent = totalIngest > 0 ? (reductionRaw / totalIngest) * 100 : 0;
 
+  // Handle Term Duration blur for validation
+  const handleTermBlur = () => {
+    let parsed = parseInt(defaultTermDuration, 10);
+    if (isNaN(parsed) || parsed < 1) parsed = 1;
+    if (parsed > 120) parsed = 120;
+    setDefaultTermDuration(parsed.toString());
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '320px', height: '100%', padding: '20px', overflowY: 'auto', boxSizing: 'border-box' }}>
       <div>
@@ -468,6 +570,44 @@ const DashboardPanel: React.FC<{ isRunning: boolean }> = ({ isRunning }) => {
         <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)' }}>
           Real-time visibility into the entire network visibility fabric.
         </p>
+      </div>
+
+      <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Project Settings
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <FormGroup label="Default License Mode">
+            <select
+              value={projectLicenseMode}
+              onChange={(e) => setProjectLicenseMode(e.target.value as 'HTL' | 'Perpetual')}
+            >
+              <option value="HTL">Hybrid Term Licensing (HTL)</option>
+              <option value="Perpetual">Perpetual</option>
+            </select>
+          </FormGroup>
+          <FormGroup label="Default Term Duration (Months)">
+            <input 
+              type="number" 
+              min="1" 
+              max="120" 
+              value={defaultTermDuration} 
+              onChange={(e) => setDefaultTermDuration(e.target.value)} 
+              onBlur={handleTermBlur}
+            />
+          </FormGroup>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input 
+              type="checkbox" 
+              checked={disableDcWarnings} 
+              onChange={(e) => setDisableDcWarnings(e.target.checked)} 
+              id="disableDcWarnings"
+            />
+            <label htmlFor="disableDcWarnings" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Disable DC Power Warnings
+            </label>
+          </div>
+        </div>
       </div>
 
       {isRunning ? (

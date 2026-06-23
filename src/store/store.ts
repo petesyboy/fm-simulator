@@ -102,6 +102,9 @@ export type RFState = {
   isRunning: boolean;
   simulationSpeed: number; // multiplier, e.g. 1
   advancedMode: boolean;
+  projectLicenseMode: 'HTL' | 'Perpetual';
+  defaultTermDuration: string;
+  disableDcWarnings: boolean;
   trafficStreams: TrafficStream[];
   nodeMetrics: Record<string, NodeMetrics>;
   activeEdges: string[];
@@ -119,6 +122,9 @@ export type RFState = {
   toggleSimulation: () => void;
   setSimulationSpeed: (speed: number) => void;
   setAdvancedMode: (mode: boolean) => void;
+  setProjectLicenseMode: (mode: 'HTL' | 'Perpetual') => void;
+  setDefaultTermDuration: (duration: string) => void;
+  setDisableDcWarnings: (disable: boolean) => void;
   addTrafficStream: (stream: TrafficStream) => void;
   updateTrafficStream: (id: string, stream: Partial<TrafficStream>) => void;
   deleteTrafficStream: (id: string) => void;
@@ -448,6 +454,9 @@ export const useStore = create<RFState>((set, get) => ({
   isRunning: false,
   simulationSpeed: 1,
   advancedMode: false,
+  projectLicenseMode: 'HTL',
+  defaultTermDuration: '36',
+  disableDcWarnings: false,
   trafficStreams: initialTraffic,
   nodeMetrics: {},
   activeEdges: [],
@@ -578,6 +587,10 @@ export const useStore = create<RFState>((set, get) => ({
   setAdvancedMode: (mode: boolean) => {
     set({ advancedMode: mode });
   },
+
+  setProjectLicenseMode: (mode) => set({ projectLicenseMode: mode }),
+  setDefaultTermDuration: (duration) => set({ defaultTermDuration: duration }),
+  setDisableDcWarnings: (disable) => set({ disableDcWarnings: disable }),
 
   addTrafficStream: (stream: TrafficStream) => {
     set({ trafficStreams: [...get().trafficStreams, stream] });

@@ -16,7 +16,6 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store/store';
-import { NODE_TYPES } from '../constants/nodeTypes';
 import pkg from '../../package.json';
 
 // ─── Toast notification ───────────────────────────────────────────────────────
@@ -74,91 +73,33 @@ const ConfirmModal: React.FC<{
 
 // ─── BOM Modal ────────────────────────────────────────────────────────────────
 
+import { generateBom } from '../utils/bomEngine';
+
 const BomModal: React.FC<{
   onClose: () => void;
 }> = ({ onClose }) => {
   const nodes = useStore((state) => state.nodes);
+  const globalLicenseMode = useStore((state) => state.projectLicenseMode);
+  const globalTermDuration = useStore((state) => state.defaultTermDuration);
   
-  // Aggregate hardware nodes and their optics
-  const bom: Record<string, { model: string; sku: string; qty: number; type: string }> = {};
-  
-  let stdTapCount = 0;
-  let ultTapCount = 0;
-
-  nodes.forEach(n => {
-    if (n.type === NODE_TYPES.HARDWARE) {
-      const sku = (n.data?.sku as string) || 'UNKNOWN-SKU';
-      const model = (n.data?.model as string) || 'Hardware';
-      
-      // Filter out any stray chassis that might have been added before we hid them
-      if (['TAP-M100T', 'TAP-M200T', 'TAP-M202ULT'].includes(sku)) return;
-
-      if (!bom[sku]) bom[sku] = { model, sku, qty: 0, type: 'Appliance/TAP' };
-      bom[sku].qty += 1;
-      
-      if (sku.includes('TAP')) {
-        if (sku.includes('ULT')) ultTapCount += 1;
-        else stdTapCount += 1;
-      }
-
-      const optics = (n.data?.optics as { board: string, optic: string, qty: number }[]) || [];
-      optics.forEach(opt => {
-        const optKey = `OPTIC-${opt.optic}`;
-        if (!bom[optKey]) bom[optKey] = { model: opt.optic, sku: opt.optic, qty: 0, type: 'Optic/Transceiver' };
-        bom[optKey].qty += opt.qty;
-      });
-
-      const installedBoards = (n.data?.installedBoards as Record<string, string>) || {};
-      Object.values(installedBoards).forEach(boardName => {
-        const boardKey = `BOARD-${boardName}`;
-        if (!bom[boardKey]) bom[boardKey] = { model: boardName, sku: boardName, qty: 0, type: 'Module/Board' };
-        bom[boardKey].qty += 1;
-      });
-    }
-  });
-
-  if (stdTapCount > 0) {
-    const m200t_qty = Math.floor(stdTapCount / 6);
-    const remainder = stdTapCount % 6;
-    let m100t_qty = 0;
-    let extra_m200t_qty = 0;
-
-    if (remainder >= 4) {
-      extra_m200t_qty = 1;
-    } else if (remainder > 0) {
-      m100t_qty = 1;
-    }
-
-    if (m200t_qty + extra_m200t_qty > 0) {
-      bom['TAP-M200T'] = { model: 'TAP-M200T', sku: 'TAP-M200T', qty: m200t_qty + extra_m200t_qty, type: 'Appliance/TAP (Chassis)' };
-    }
-    if (m100t_qty > 0) {
-      bom['TAP-M100T'] = { model: 'TAP-M100T', sku: 'TAP-M100T', qty: m100t_qty, type: 'Appliance/TAP (Chassis)' };
-    }
-  }
-
-  if (ultTapCount > 0) {
-    const m202ult_qty = Math.ceil(ultTapCount / 2);
-    bom['TAP-M202ULT'] = { model: 'TAP-M202ULT', sku: 'TAP-M202ULT', qty: m202ult_qty, type: 'Appliance/TAP (Chassis)' };
-  }
-  
-  const items = Object.values(bom).sort((a, b) => a.type.localeCompare(b.type) || a.model.localeCompare(b.model));
+  const items = generateBom(nodes, globalLicenseMode, globalTermDuration);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-      <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '24px', width: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.8)' }}>
+      <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '24px', width: '900px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.8)' }}>
         <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#ffb74d' }}>Bill of Materials (BOM)</h3>
         
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
           {items.length === 0 ? (
             <div style={{ color: '#aaa', fontSize: '12px', textAlign: 'center', padding: '20px' }}>No hardware nodes tracked in the current layout.</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #444' }}>
                   <th style={{ padding: '8px', color: '#888' }}>Type</th>
-                  <th style={{ padding: '8px', color: '#888' }}>Model</th>
                   <th style={{ padding: '8px', color: '#888' }}>SKU</th>
+                  <th style={{ padding: '8px', color: '#888' }}>Description</th>
+                  <th style={{ padding: '8px', color: '#888', textAlign: 'right' }}>Term (Mo)</th>
                   <th style={{ padding: '8px', color: '#888', textAlign: 'right' }}>Qty</th>
                 </tr>
               </thead>
@@ -166,8 +107,9 @@ const BomModal: React.FC<{
                 {items.map((item, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #333' }}>
                     <td style={{ padding: '8px', color: '#ccc' }}>{item.type}</td>
-                    <td style={{ padding: '8px', color: '#fff', fontWeight: 'bold' }}>{item.model}</td>
-                    <td style={{ padding: '8px', color: '#00e5ff', fontFamily: 'monospace' }}>{item.sku}</td>
+                    <td style={{ padding: '8px', color: '#00e5ff', fontFamily: 'monospace', fontWeight: 'bold' }}>{item.sku}</td>
+                    <td style={{ padding: '8px', color: '#aaa', maxWidth: '350px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
+                    <td style={{ padding: '8px', color: '#fff', textAlign: 'right' }}>{item.term || '-'}</td>
                     <td style={{ padding: '8px', color: '#fff', textAlign: 'right' }}>{item.qty}</td>
                   </tr>
                 ))}
@@ -178,7 +120,10 @@ const BomModal: React.FC<{
         
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '8px' }}>
           <button onClick={() => {
-            const csv = ['Type,Model,SKU,Qty'].concat(items.map(i => `"${i.type}","${i.model}","${i.sku}",${i.qty}`)).join('\n');
+            const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+            const csv = ['Type,SKU,Description,Term(Months),Qty']
+              .concat(items.map(i => `${escapeCsv(i.type)},${escapeCsv(i.sku)},${escapeCsv(i.description)},${i.term || ''},${i.qty}`))
+              .join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
