@@ -189,8 +189,9 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
         {/* ── Top Brand Bar ── */}
         <header className="header-brand">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span className="brand-logo">Gigamon Flow Mapping Example</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src="/gigamon-logo.png" alt="Gigamon" style={{ height: '18px', display: 'block', objectFit: 'contain' }} />
+              <span className="brand-logo" style={{ color: 'var(--text-secondary)', textShadow: 'none', fontWeight: 500, fontSize: '13px' }}>Flow Mapping Example</span>
               <span className="build-number">
                 v{(() => {
                   const parts = pkg.version.split('.');
