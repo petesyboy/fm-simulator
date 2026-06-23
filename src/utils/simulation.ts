@@ -338,30 +338,32 @@ export const calculateSimulationStep = (
     let dropBandwidth = 0;
     let generatedMetadataStreams: TrajectoryStream[] = [];
 
-    if (node.type === 'toolNode') {
-      const data = node.data as ToolNodeData;
-      const configType = data.configType || '';
-      const isPacketTool = configType === 'Packet Tool';
-      const isMetadataTool = configType === 'Metadata Tool';
-      const rType = item.stream.trafficType || 'packet';
-      
-      let isValidForTool = true;
-      if (isPacketTool && rType !== 'packet') isValidForTool = false;
-      if (isMetadataTool && rType !== 'metadata') isValidForTool = false;
+      if (node.type === 'toolNode') {
+        const data = node.data as ToolNodeData;
+        const configType = data.configType || '';
+        const isPacketTool = configType === 'Packet Tool';
+        const isMetadataTool = configType === 'Metadata Tool';
+        const rType = item.stream.trafficType || 'packet';
+        
+        let isValidForTool = true;
+        if (isPacketTool && rType !== 'packet') isValidForTool = false;
+        if (isMetadataTool && rType !== 'metadata') isValidForTool = false;
 
-      if (!toolReceivedStreams[node.id]) {
-        toolReceivedStreams[node.id] = [];
+        if (!toolReceivedStreams[node.id]) {
+          toolReceivedStreams[node.id] = [];
+        }
+        
+        if (isValidForTool) {
+          toolReceivedStreams[node.id].push(item.stream);
+          deliveredStreamIds.add(item.stream.id);
+        } else {
+          // If the stream is ignored by the tool, subtract it from the tool's Rx metrics
+          // because it was already added globally above!
+          nodeMetric.rxBps -= item.stream.bandwidth;
+          nodeMetric.rxPackets -= item.stream.bandwidth * 250;
+        }
+        continue;
       }
-      toolReceivedStreams[node.id].push(item.stream);
-      
-      if (isValidForTool) {
-        deliveredStreamIds.add(item.stream.id);
-        // Only count valid traffic towards the tool's Rx bandwidth
-        nodeMetric.rxBps += item.stream.bandwidth;
-        nodeMetric.rxPackets += item.stream.bandwidth * 250;
-      }
-      continue;
-    }
 
     if (node.type === 'filterNode') {
       const data = node.data as FilterNodeData;
