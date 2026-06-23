@@ -128,7 +128,7 @@ const HardwareNodePanel: React.FC<{
 
   const [selectedOpticBoard, setSelectedOpticBoard] = useState('');
   const [selectedOptic, setSelectedOptic] = useState('');
-  const [qty, setQty] = useState(1);
+  const [qtyStr, setQtyStr] = useState('1');
   const [errorMsg, setErrorMsg] = useState('');
 
   let details: any = null;
@@ -179,11 +179,14 @@ const HardwareNodePanel: React.FC<{
       return;
     }
 
+    let qty = parseInt(qtyStr);
+    if (isNaN(qty) || qty < 1) qty = 1;
+
     const newOpticObj = { board: targetBoard, optic: selectedOptic, qty };
     const newOptics = [...installedOptics, newOpticObj];
     updateNodeData(node.id, { optics: newOptics });
     setSelectedOptic('');
-    setQty(1);
+    setQtyStr('1');
   };
 
   const handleRemoveOptic = (index: number) => {
@@ -351,8 +354,8 @@ const HardwareNodePanel: React.FC<{
               <input 
                 type="number" 
                 min={1} 
-                value={qty} 
-                onChange={e => setQty(parseInt(e.target.value) || 1)}
+                value={qtyStr} 
+                onChange={e => setQtyStr(e.target.value)}
                 style={{ width: '40px', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
               />
               <button 
