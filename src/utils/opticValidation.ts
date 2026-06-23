@@ -13,8 +13,8 @@ export interface OpticSupport {
  * Returns a list of boards/modules and their supported optics for a given hardware model.
  */
 export function getSupportedBoards(model: string): OpticSupport[] {
-  // Find a matching key in opticRules. Keys might have extra whitespace or GVOS versions appended.
-  const match = Object.keys(opticRules).find(k => k.startsWith(model) || model.startsWith(k.split(' ')[0]));
+  const keys = Object.keys(opticRules).sort((a, b) => b.length - a.length);
+  const match = keys.find(k => k === model || k.startsWith(model) || model.startsWith(k.split(' ')[0]));
   if (!match) return [];
   
   const rules = opticRules[match];

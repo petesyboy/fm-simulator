@@ -48,6 +48,7 @@ import { type NodeMetrics } from '../store/store';
 import hardwareCatalogue from '../constants/hardwareCatalogue.json';
 import { getSupportedBoards, validateOptic } from '../utils/opticValidation';
 import skusData from '../constants/skus.json';
+import { resolveNodeSkus } from '../utils/skuResolver';
 
 // ─── Shared form helpers ──────────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ const HardwareNodePanel: React.FC<{
   const updateNodeData = useStore(state => state.updateNodeData);
   const edges = useStore(state => state.edges);
   const nodes = useStore(state => state.nodes);
+  const projectLicenseMode = useStore(state => state.projectLicenseMode);
 
   // Calculate TAP link requirements and total optics
   const incomingTapEdges = edges.filter(e => e.target === node.id);
@@ -348,52 +350,76 @@ const HardwareNodePanel: React.FC<{
     );
   };
 
-  return (
-    <div style={{ padding: '12px', background: 'rgba(255, 152, 0, 0.05)', borderRadius: '6px', border: '1px solid rgba(255, 152, 0, 0.15)' }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#ff9800' }}>Hardware Specifications</h3>
-      {details ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', marginBottom: '16px' }}>
-          <div><strong>Model:</strong> {details.model}</div>
-          <div><strong>SKU:</strong> {details.sku}</div>
-          {skusData[details.sku as keyof typeof skusData] && (
-            <div style={{ 
-              background: 'rgba(255, 152, 0, 0.08)', 
-              padding: '8px 12px', 
-              borderRadius: '6px', 
-              border: '1px solid rgba(255, 152, 0, 0.2)', 
-              marginTop: '4px', 
-              marginBottom: '6px',
-              fontSize: '11px', 
-              color: '#ffe0b2', 
-              lineHeight: '1.4' 
-            }}>
-              <strong>Description:</strong> {skusData[details.sku as keyof typeof skusData]}
-            </div>
-          )}
-          {details.ru && <div><strong>Form Factor:</strong> {details.ru} RU</div>}
-          {details.power && <div><strong>Power:</strong> {details.power}</div>}
-          {details.fans !== undefined && <div><strong>Fans:</strong> {details.fans}</div>}
-          {details.airflow && <div><strong>Airflow:</strong> {details.airflow}</div>}
-          {details.ports !== undefined && <div><strong>Base Ports:</strong> {details.ports}</div>}
-          {details.base_ports !== undefined && <div><strong>Base Ports:</strong> {details.base_ports}</div>}
-          {details.module_slots !== undefined && <div><strong>Module Slots:</strong> {details.module_slots}</div>}
-        </div>
-      ) : (
-        <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '16px' }}>Specs not found for {sku}.</div>
-      )}
+  const resolved = resolveNodeSkus({ ...node.data, model, sku }, projectLicenseMode);
 
-      {/* Appliance Configuration */}
+  return (
+    <>
+      <div className="config-card">
+        <h3>⚙️ Hardware Specifications</h3>
+        {details ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+            <div><strong>Model:</strong> {details.model}</div>
+            <div><strong>Hardware SKU:</strong> {resolved.hwSku}</div>
+            {skusData[resolved.hwSku as keyof typeof skusData] && (
+              <div style={{ 
+                background: 'rgba(255, 152, 0, 0.08)', 
+                padding: '8px 12px', 
+                borderRadius: '6px', 
+                border: '1px solid rgba(255, 152, 0, 0.2)', 
+                marginTop: '4px', 
+                marginBottom: '6px',
+                fontSize: '11px', 
+                color: '#ffe0b2', 
+                lineHeight: '1.4' 
+              }}>
+                <strong>Hardware Description:</strong> {skusData[resolved.hwSku as keyof typeof skusData]}
+              </div>
+            )}
+            
+            {resolved.swSku && (
+              <>
+                <div style={{ marginTop: '4px' }}><strong>Software SKU:</strong> {resolved.swSku}</div>
+                {skusData[resolved.swSku as keyof typeof skusData] && (
+                  <div style={{ 
+                    background: 'rgba(0, 229, 255, 0.08)', 
+                    padding: '8px 12px', 
+                    borderRadius: '6px', 
+                    border: '1px solid rgba(0, 229, 255, 0.2)', 
+                    marginTop: '4px', 
+                    marginBottom: '6px',
+                    fontSize: '11px', 
+                    color: '#e0f7fa', 
+                    lineHeight: '1.4' 
+                  }}>
+                    <strong>Software Description:</strong> {skusData[resolved.swSku as keyof typeof skusData]}
+                  </div>
+                )}
+              </>
+            )}
+
+            {details.ru && <div><strong>Form Factor:</strong> {details.ru} RU</div>}
+            {details.power && <div><strong>Power:</strong> {details.power}</div>}
+            {details.fans !== undefined && <div><strong>Fans:</strong> {details.fans}</div>}
+            {details.airflow && <div><strong>Airflow:</strong> {details.airflow}</div>}
+            {details.ports !== undefined && <div><strong>Base Ports:</strong> {details.ports}</div>}
+            {details.base_ports !== undefined && <div><strong>Base Ports:</strong> {details.base_ports}</div>}
+            {details.module_slots !== undefined && <div><strong>Module Slots:</strong> {details.module_slots}</div>}
+          </div>
+        ) : (
+          <div style={{ fontSize: '12px', color: '#aaa' }}>Specs not found for {sku}.</div>
+        )}
+      </div>
+
       {!model?.includes('TAP') && (
-        <div style={{ marginBottom: '16px', padding: '10px', background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '4px' }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#ccc', textTransform: 'uppercase' }}>Appliance Configuration</h4>
-          
+        <div className="config-card">
+          <h3>🔧 Appliance Configuration</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>License Mode Override</label>
               <select
                 value={(node.data?.licenseModeOverride as string) || 'default'}
                 onChange={(e) => updateNodeData(node.id, { licenseModeOverride: e.target.value })}
-                style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+                style={{ width: '100%' }}
               >
                 <option value="default">Project Default</option>
                 <option value="HTL">Hybrid Term Licensing (HTL)</option>
@@ -409,7 +435,7 @@ const HardwareNodePanel: React.FC<{
                 value={termDurationStr}
                 onChange={(e) => setTermDurationStr(e.target.value)}
                 onBlur={handleTermBlur}
-                style={{ width: '100%', boxSizing: 'border-box', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+                style={{ width: '100%', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -418,7 +444,7 @@ const HardwareNodePanel: React.FC<{
               <select
                 value={(node.data?.powerSupply as string) || 'AC'}
                 onChange={(e) => handlePowerChange(e.target.value)}
-                style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+                style={{ width: '100%' }}
               >
                 <option value="AC">AC Power</option>
                 <option value="DC">DC Power</option>
@@ -431,7 +457,7 @@ const HardwareNodePanel: React.FC<{
                 <select
                   value={(node.data?.portCapacity as string) || 'Full'}
                   onChange={(e) => updateNodeData(node.id, { portCapacity: e.target.value })}
-                  style={{ width: '100%', fontSize: '11px', padding: '4px', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '3px' }}
+                  style={{ width: '100%' }}
                 >
                   <option value="Full">Full Capacity</option>
                   <option value="Half">Half Capacity</option>
@@ -731,7 +757,7 @@ const HardwareNodePanel: React.FC<{
           )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
@@ -1547,40 +1573,58 @@ const ConfigPanel: React.FC = () => {
             />
           )}
           {selectedNode.type === NODE_TYPES.INPUT && (
-            <InputNodePanel node={selectedNode} onGenericChange={handleGenericChange} />
+            <div className="config-card">
+              <h3>📥 Port Configuration</h3>
+              <InputNodePanel node={selectedNode} onGenericChange={handleGenericChange} />
+            </div>
           )}
           {selectedNode.type === NODE_TYPES.FILTER && (
-            <FilterNodePanel node={selectedNode} onGenericChange={handleGenericChange} />
+            <div className="config-card">
+              <h3>🛡️ Tunnel Filter Configuration</h3>
+              <FilterNodePanel node={selectedNode} onGenericChange={handleGenericChange} />
+            </div>
           )}
           {selectedNode.type === NODE_TYPES.GIGASTREAM && (
-            <FormGroup label="Load Balancing Algorithm">
-              <select
-                value={(selectedNode.data?.algorithm as string) || 'Round Robin'}
-                onChange={(e) => handleGenericChange('algorithm', e.target.value)}
-              >
-                <option value="Round Robin">Round Robin (Even Split)</option>
-                <option value="L4 Hash">L4 Hash (Five-Tuple hash)</option>
-              </select>
-            </FormGroup>
+            <div className="config-card">
+              <h3>⚖️ Load Balancing</h3>
+              <FormGroup label="Load Balancing Algorithm">
+                <select
+                  value={(selectedNode.data?.algorithm as string) || 'Round Robin'}
+                  onChange={(e) => handleGenericChange('algorithm', e.target.value)}
+                >
+                  <option value="Round Robin">Round Robin (Even Split)</option>
+                  <option value="L4 Hash">L4 Hash (Five-Tuple hash)</option>
+                </select>
+              </FormGroup>
+            </div>
           )}
           {selectedNode.type === NODE_TYPES.GIGASMART && (
-            <GigaSmartPanel node={selectedNode} onGenericChange={handleGenericChange} />
+            <div className="config-card">
+              <h3>⚡ GigaSMART Configuration</h3>
+              <GigaSmartPanel node={selectedNode} onGenericChange={handleGenericChange} />
+            </div>
           )}
           {selectedNode.type === NODE_TYPES.TOOL && (
-            <ToolNodePanel
-              node={selectedNode}
-              onGenericChange={handleGenericChange}
-              isRunning={isRunning}
-              metrics={selectedNodeMetric}
-            />
+            <div className="config-card">
+              <h3>📊 Tool Endpoint Configuration</h3>
+              <ToolNodePanel
+                node={selectedNode}
+                onGenericChange={handleGenericChange}
+                isRunning={isRunning}
+                metrics={selectedNodeMetric}
+              />
+            </div>
           )}
           {configType === CONFIG_TYPES.TRAFFIC_MAP && (
-            <MapNodePanel
-              node={selectedNode}
-              onConditionChange={handleConditionChange}
-              onAddCondition={handleAddCondition}
-              onRemoveCondition={handleRemoveCondition}
-            />
+            <div className="config-card">
+              <h3>🗺️ Traffic Map Configuration</h3>
+              <MapNodePanel
+                node={selectedNode}
+                onConditionChange={handleConditionChange}
+                onAddCondition={handleAddCondition}
+                onRemoveCondition={handleRemoveCondition}
+              />
+            </div>
           )}
 
           {/* Live metrics — shown for any node while simulation is running */}

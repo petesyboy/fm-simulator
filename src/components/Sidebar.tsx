@@ -65,7 +65,6 @@ const Sidebar: React.FC = () => {
   const { advancedMode, setAdvancedMode } = useStore();
   const [openSections, setOpenSections] = useState({
     demo: true,  // "Demonstration" section — expanded by default
-    new: true,   // "New elements" section
     apps: true,  // "Applications" section — shows all 15 GigaSMART apps
     advanced: true, // "Hardware" section for advanced mode
   });
@@ -149,7 +148,7 @@ const Sidebar: React.FC = () => {
         {/* ── Collapsible Section: Demonstration ── */}
         <div className="tree-section">
           <div className="tree-header" onClick={() => toggleSection('demo')}>
-            <span className={`chevron ${openSections.demo ? 'open' : ''}`}>▼</span>
+            <span className={`chevron ${openSections.demo ? 'open' : ''}`}>▶</span>
             <span>Demonstration</span>
             <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>⚡</span>
           </div>
@@ -178,6 +177,16 @@ const Sidebar: React.FC = () => {
               <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.INPUT, 'VMWare Estate 1', { configType: CONFIG_TYPES.VMWARE, linkSpeed: 40000 })}>
                 <VmwareIcon size={18} />
                 <span>VMWare Estate</span>
+              </div>
+
+              <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TRAFFIC ROUTING</div>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.MAP, 'Traffic Map')}>
+                <MapIcon size={18} />
+                <span>Traffic Map</span>
+              </div>
+              <div className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.FILTER, 'VLAN Filter')}>
+                <GreenCircleIcon size={18} />
+                <span>Traffic Tunnel</span>
               </div>
 
               <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>PACKET CONSUMING TOOLS</div>
@@ -229,51 +238,10 @@ const Sidebar: React.FC = () => {
           )}
         </div>
 
-        {/* ── Collapsible Section: New (core building blocks) ── */}
-        <div className="tree-section">
-          <div className="tree-header" onClick={() => toggleSection('new')}>
-            <span className={`chevron ${openSections.new ? 'open' : ''}`}>▼</span>
-            <span>New</span>
-            <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>🔍</span>
-          </div>
-
-          {openSections.new && (
-            <div className="tree-content">
-              <div
-                className="tree-draggable"
-                draggable
-                onDragStart={(e) => onDragStart(e, NODE_TYPES.MAP, 'Traffic Map')}
-              >
-                <MapIcon size={18} />
-                <span>New Map</span>
-                <span className="info-badge">i</span>
-              </div>
-
-              <div
-                className="tree-draggable"
-                draggable
-                onDragStart={(e) => onDragStart(e, NODE_TYPES.FILTER, 'VLAN Filter')}
-              >
-                <GreenCircleIcon size={18} />
-                <span>New Tunnel</span>
-              </div>
-
-              <div
-                className="tree-draggable"
-                draggable
-                onDragStart={(e) => onDragStart(e, NODE_TYPES.TOOL, 'Vectra')}
-              >
-                <GreenCircleIcon size={18} />
-                <span>New Raw Endpoint</span>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* ── Collapsible Section: Applications (15 GigaSMART applications) ── */}
         <div className="tree-section">
           <div className="tree-header" onClick={() => toggleSection('apps')}>
-            <span className={`chevron ${openSections.apps ? 'open' : ''}`}>▼</span>
+            <span className={`chevron ${openSections.apps ? 'open' : ''}`}>▶</span>
             <span>Applications</span>
             <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>🔍</span>
           </div>
@@ -304,7 +272,7 @@ const Sidebar: React.FC = () => {
         {advancedMode && (
           <div className="tree-section">
             <div className="tree-header" onClick={() => toggleSection('advanced')}>
-              <span className={`chevron ${openSections.advanced ? 'open' : ''}`}>▼</span>
+              <span className={`chevron ${openSections.advanced ? 'open' : ''}`}>▶</span>
               <span>Physical Hardware (SE)</span>
               <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#888' }}>⚙️</span>
             </div>

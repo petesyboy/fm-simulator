@@ -23,6 +23,7 @@ import {
   PacketToolIcon, MetadataToolIcon, S3StorageIcon, WiresharkIcon,
 } from './Icons';
 import { CONFIG_TYPES, ACTION_TYPES, isMetadataAction, isDedupAction } from '../constants/nodeTypes';
+import { resolveNodeSkus } from '../utils/skuResolver';
 
 // ─── InputNode ────────────────────────────────────────────────────────────────
 
@@ -472,7 +473,9 @@ export const GroupNode: React.FC<NodeProps> = ({ data, selected }) => {
 
 export const HardwareNode: React.FC<NodeProps> = ({ data, selected }) => {
   const model = (data.model as string) || 'Hardware';
-  const sku = (data.sku as string) || '';
+  const projectLicenseMode = useStore((state) => state.projectLicenseMode);
+  const resolved = resolveNodeSkus(data, projectLicenseMode);
+  const displaySku = resolved.swSku ? `${resolved.hwSku} + ${resolved.swSku}` : resolved.hwSku;
   const image = (data.image as string) || '';
   
   let iconComponent = image ? (
@@ -497,7 +500,7 @@ export const HardwareNode: React.FC<NodeProps> = ({ data, selected }) => {
         </div>
         <div className="node-type-label" style={{ display: 'block', color: '#ff9800', fontWeight: 'bold' }}>{model}</div>
         <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8 }}>
-          <span>SKU: {sku}</span>
+          <span>SKU: {displaySku}</span>
         </div>
         <Handle type="source" position={Position.Right} id="out" />
       </div>

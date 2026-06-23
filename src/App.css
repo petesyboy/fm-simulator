@@ -334,30 +334,37 @@
 
 .tree-header {
   padding: 10px 14px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   background-color: rgba(0,0,0,0.15);
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .tree-header:hover {
   background-color: rgba(255,255,255,0.02);
   color: white;
+  border-left-color: rgba(255, 152, 0, 0.4);
 }
 
 .tree-header .chevron {
   font-size: 8px;
   color: var(--text-muted);
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
   width: 10px;
+  display: inline-block;
 }
 
 .tree-header .chevron.open {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
+  color: #ff9800;
 }
 
 .tree-content {
@@ -917,4 +924,69 @@
   border-radius: 3px;
   padding: 1px 5px;
   font-family: monospace;
+}
+
+/* Premium Configuration Panel Cards & Layout */
+.config-card {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.config-card:hover {
+  border-color: rgba(255, 152, 0, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.config-card h3 {
+  margin: 0 0 10px 0 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ff9800 !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.config-card h4 {
+  margin: 0 0 10px 0 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffb74d !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+}
+
+.config-panel input[type="text"],
+.config-panel input[type="number"],
+.config-panel select {
+  background-color: #121212 !important;
+  border: 1px solid #2d2d2d !important;
+  border-radius: 4px !important;
+  padding: 8px 10px !important;
+  font-size: 11px !important;
+  color: #e0e0e0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.config-panel input[type="text"]:focus,
+.config-panel input[type="number"]:focus,
+.config-panel select:focus {
+  border-color: #ff9800 !important;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1) !important;
+  background-color: #161616 !important;
+}
+
+.config-section-divider {
+  height: 1px;
+  background: linear-gradient(to right, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0));
+  margin: 16px 0;
 }

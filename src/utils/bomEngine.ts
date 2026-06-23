@@ -2,6 +2,7 @@ import skusData from '../constants/skus.json';
 import type { CustomNode } from '../store/store';
 import type { Edge } from '@xyflow/react';
 import hardwareCatalogue from '../constants/hardwareCatalogue.json';
+import { resolveNodeSkus } from './skuResolver';
 
 const skus: Record<string, string> = skusData as Record<string, string>;
 
@@ -72,79 +73,26 @@ export function generateBom(
     if (node.type !== 'hardwareNode') return;
     
     const model = (node.data?.model as string) || '';
-    const baseSku = (node.data?.sku as string) || '';
+    const termOverride = (node.data?.termDurationOverride as string) || globalTermDuration;
     const licenseMode = (node.data?.licenseModeOverride as string && node.data?.licenseModeOverride !== 'default') 
-      ? node.data?.licenseModeOverride 
+      ? node.data?.licenseModeOverride as 'HTL' | 'Perpetual'
       : globalLicenseMode;
       
-    const termOverride = (node.data?.termDurationOverride as string) || globalTermDuration;
-    const power = (node.data?.powerSupply as string) || 'AC';
-    const capacity = (node.data?.portCapacity as string) || 'Full';
-
-    let actualHwSku = baseSku;
-    
-    if (model.includes('HC1') && !model.includes('HC1-Plus')) {
-      actualHwSku = power === 'DC' ? 'GVS-HC102' : 'GVS-HC101';
-    } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
-      actualHwSku = power === 'DC' ? 'GVS-HC1P2' : 'GVS-HC1P1';
-    } else if (model.includes('HC3')) {
-      actualHwSku = power === 'DC' ? 'GVS-HC3A2' : 'GVS-HC3A1';
-    } else if (model.includes('TA25E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAX22E' : 'GVS-TAX21E';
-    } else if (model.includes('TA25') && !model.includes('TA25E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAX22' : 'GVS-TAX21';
-    } else if (model.includes('TA200E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAC22E' : 'GVS-TAC21E';
-    } else if (model.includes('TA200') && !model.includes('TA200E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAC22' : 'GVS-TAC21';
-    } else if (model.includes('TA400E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAC42E' : 'GVS-TAC41E';
-    } else if (model.includes('TA400') && !model.includes('TA400E')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAC42' : 'GVS-TAC41';
-    } else if (model.includes('TA10') && !model.includes('TA100')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAX02' : 'GVS-TAX01';
-    } else if (model.includes('TA100')) {
-      actualHwSku = power === 'DC' ? 'GVS-TAC02' : 'GVS-TAC01';
-    }
+    const resolved = resolveNodeSkus(node.data || {}, globalLicenseMode);
 
     if (model.includes('TAP')) {
-      addRow(actualHwSku, 1, 'TAP');
+      addRow(resolved.hwSku, 1, 'TAP');
       
-      const tapEntry = hardwareCatalogue.taps.find(t => t.sku === actualHwSku);
+      const tapEntry = hardwareCatalogue.taps.find(t => t.sku === resolved.hwSku);
       if (tapEntry && tapEntry.type === 'module') {
         totalTapModules += 1;
       }
       return;
     }
 
-    if (licenseMode === 'HTL') {
-      const hwSku = actualHwSku + '-HW';
-      let swSku = '';
-
-      if (model.includes('HC1') && !model.includes('HC1-Plus')) swSku = 'GVS-HC100-SW-TM';
-      else if (model.includes('HC1-Plus') || model.includes('HC1P')) swSku = 'GVS-HC1P-SW-TM';
-      else if (model.includes('HC3')) swSku = 'GVS-HC3A0-SW-TM';
-      else if (model.includes('TA')) {
-         let swBase = actualHwSku;
-         if (swBase.includes('TAX21')) swBase = swBase.replace('TAX21', 'TAX20');
-         else if (swBase.includes('TAX22')) swBase = swBase.replace('TAX22', 'TAX20');
-         else if (swBase.includes('TAC21')) swBase = swBase.replace('TAC21', 'TAC20');
-         else if (swBase.includes('TAC22')) swBase = swBase.replace('TAC22', 'TAC20');
-         else if (swBase.includes('TAC41')) swBase = swBase.replace('TAC41', 'TAC40');
-         else if (swBase.includes('TAC42')) swBase = swBase.replace('TAC42', 'TAC40');
-         else swBase = swBase.replace(/1|2/, '0'); // fallback
-         
-         if (capacity === 'Half') swBase += 'A';
-         else if (capacity === 'Quarter') swBase += 'B';
-         swSku = swBase + '-SW-TM';
-      }
-
-      addRow(hwSku, 1, 'Chassis');
-      if (swSku) {
-        addRow(swSku, 1, 'Chassis', termOverride);
-      }
-    } else {
-      addRow(actualHwSku, 1, 'Chassis');
+    addRow(resolved.hwSku, 1, 'Chassis');
+    if (resolved.swSku) {
+      addRow(resolved.swSku, 1, 'Chassis', termOverride);
     }
 
     const installedBoards = (node.data?.installedBoards as Record<string, string>) || {};
