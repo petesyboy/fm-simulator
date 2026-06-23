@@ -177,6 +177,79 @@ const HardwareNodePanel: React.FC<{
     ? availableOpticBoards[0] 
     : availableOpticBoards.find(b => b.board === selectedOpticBoard);
 
+  const getOpticSpeed = (opticName: string): '1G' | '10G' | '25G' | '40G' | '100G' | 'Unknown' => {
+    const name = opticName.toUpperCase();
+    if (name.includes('100G') || name.startsWith('Q28-')) return '100G';
+    if (name.includes('40G') || name.startsWith('QSF-')) return '40G';
+    if (name.includes('25G') || name.startsWith('SFP-55')) return '25G';
+    if (name.includes('10G') || name.startsWith('SFP-53')) return '10G';
+    if (name.includes('1G') || name.startsWith('SFP-50')) return '1G';
+    return 'Unknown';
+  };
+
+  const getBoardCageCapacities = (boardName: string, isPlus: boolean): {
+    ports1G: number;
+    ports10G: number;
+    ports25G: number;
+    ports40G: number;
+    ports100G: number;
+  } => {
+    const caps = { ports1G: 0, ports10G: 0, ports25G: 0, ports40G: 0, ports100G: 0 };
+    const name = boardName.toLowerCase();
+    
+    if (name.includes('main') || name.includes('base ports') || name.includes('hc1-x12g4') || name.includes('hc1p-c04x08')) {
+      if (isPlus) {
+        caps.ports100G = 4;
+        caps.ports25G = 8;
+        caps.ports10G = 8;
+        caps.ports1G = 8;
+      } else {
+        caps.ports10G = 12;
+        caps.ports1G = 16;
+      }
+    } else if (name.includes('bps-hc1-d25a24') || name.includes('d25a24')) {
+      caps.ports10G = 24;
+      caps.ports1G = 24;
+    } else if (name.includes('prt-hc1-x12') || name.includes('x12')) {
+      caps.ports10G = 12;
+      caps.ports1G = 12;
+    } else if (name.includes('prt-hc1-q04x08') || name.includes('q04x08')) {
+      if (isPlus) {
+        caps.ports100G = 4;
+        caps.ports25G = 8;
+        caps.ports10G = 8;
+        caps.ports1G = 8;
+      } else {
+        caps.ports40G = 4;
+        caps.ports10G = 8;
+        caps.ports1G = 8;
+      }
+    }
+    return caps;
+  };
+
+  let total100G = 0, total40G = 0, total25G = 0, total10G = 0, total1G = 0;
+  const isPlus = String(model || '').includes('Plus');
+
+  availableOpticBoards.forEach(b => {
+    const caps = getBoardCageCapacities(b.board, isPlus);
+    total100G += caps.ports100G;
+    total40G += caps.ports40G;
+    total25G += caps.ports25G;
+    total10G += caps.ports10G;
+    total1G += caps.ports1G;
+  });
+
+  let used100G = 0, used40G = 0, used25G = 0, used10G = 0, used1G = 0;
+  installedOptics.forEach(opt => {
+    const speed = getOpticSpeed(opt.optic);
+    if (speed === '100G') used100G += opt.qty;
+    else if (speed === '40G') used40G += opt.qty;
+    else if (speed === '25G') used25G += opt.qty;
+    else if (speed === '10G') used10G += opt.qty;
+    else if (speed === '1G') used1G += opt.qty;
+  });
+
   const handleBoardSelect = (slotIndex: number, boardName: string) => {
     const newBoards = { ...installedBoards };
     if (boardName) {
@@ -415,6 +488,54 @@ const HardwareNodePanel: React.FC<{
       })()}
 
       {renderModuleSlots()}
+
+      {String(model || '').includes('HC') && (total100G > 0 || total40G > 0 || total25G > 0 || total10G > 0 || total1G > 0) && (
+        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Chassis Cage Capacity</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', textAlign: 'center', background: '#111', padding: '8px', borderRadius: '4px', border: '1px solid #333' }}>
+            {total100G > 0 && (
+              <div style={{ fontSize: '10px' }}>
+                <div style={{ color: '#888', fontWeight: 'bold' }}>100G</div>
+                <div style={{ color: used100G > total100G ? '#ef5350' : '#fff', fontSize: '11px', marginTop: '2px', fontFamily: 'monospace' }}>
+                  {used100G}/{total100G}
+                </div>
+              </div>
+            )}
+            {total40G > 0 && (
+              <div style={{ fontSize: '10px' }}>
+                <div style={{ color: '#888', fontWeight: 'bold' }}>40G</div>
+                <div style={{ color: used40G > total40G ? '#ef5350' : '#fff', fontSize: '11px', marginTop: '2px', fontFamily: 'monospace' }}>
+                  {used40G}/{total40G}
+                </div>
+              </div>
+            )}
+            {total25G > 0 && (
+              <div style={{ fontSize: '10px' }}>
+                <div style={{ color: '#888', fontWeight: 'bold' }}>25G</div>
+                <div style={{ color: used25G > total25G ? '#ef5350' : '#fff', fontSize: '11px', marginTop: '2px', fontFamily: 'monospace' }}>
+                  {used25G}/{total25G}
+                </div>
+              </div>
+            )}
+            {total10G > 0 && (
+              <div style={{ fontSize: '10px' }}>
+                <div style={{ color: '#888', fontWeight: 'bold' }}>10G</div>
+                <div style={{ color: used10G > total10G ? '#ef5350' : '#fff', fontSize: '11px', marginTop: '2px', fontFamily: 'monospace' }}>
+                  {used10G}/{total10G}
+                </div>
+              </div>
+            )}
+            {total1G > 0 && (
+              <div style={{ fontSize: '10px' }}>
+                <div style={{ color: '#888', fontWeight: 'bold' }}>1G</div>
+                <div style={{ color: used1G > total1G ? '#ef5350' : '#fff', fontSize: '11px', marginTop: '2px', fontFamily: 'monospace' }}>
+                  {used1G}/{total1G}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {availableOpticBoards.length > 0 && (
         <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>

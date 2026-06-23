@@ -68,6 +68,7 @@ const TrafficGenerator: React.FC = () => {
     (node.type === 'hardwareNode' && typeof node.data.model === 'string' && node.data.model.includes('TAP'))
   );
   const [noPortError, setNoPortError] = useState(false);
+  const [streamLimitError, setStreamLimitError] = useState(false);
 
   const handleAddStream = () => {
     if (inputPorts.length === 0) {
@@ -77,6 +78,20 @@ const TrafficGenerator: React.FC = () => {
       return;
     }
     setNoPortError(false);
+
+    const totalTappedLinks = nodes.reduce((sum, n) => {
+      if (n.type === 'hardwareNode' && String(n.data?.model || '').includes('TAP')) {
+        return sum + ((n.data?.tappedLinksCount as number) ?? 1);
+      }
+      return sum;
+    }, 0);
+
+    if (trafficStreams.length >= totalTappedLinks) {
+      setStreamLimitError(true);
+      setTimeout(() => setStreamLimitError(false), 4000);
+      return;
+    }
+    setStreamLimitError(false);
     
     const sourceNode = inputPorts[0];
     let defaultBandwidth = 10000;
@@ -165,6 +180,19 @@ const TrafficGenerator: React.FC = () => {
                 ⚠️ Add a Network Input port first
               </span>
             )}
+            {streamLimitError && (() => {
+              const totalTappedLinks = nodes.reduce((sum, n) => {
+                if (n.type === 'hardwareNode' && String(n.data?.model || '').includes('TAP')) {
+                  return sum + ((n.data?.tappedLinksCount as number) ?? 1);
+                }
+                return sum;
+              }, 0);
+              return (
+                <span style={{ fontSize: '11px', color: '#ef5350', background: 'rgba(239,83,80,0.1)', border: '1px solid rgba(239,83,80,0.3)', borderRadius: '4px', padding: '4px 8px' }}>
+                  ⚠️ Cannot exceed total tapped links in solution ({totalTappedLinks})
+                </span>
+              );
+            })()}
             <button
               className={`sim-btn ${isRunning ? 'running' : ''}`}
               style={{

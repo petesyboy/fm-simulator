@@ -12,7 +12,6 @@ import {
   type OnConnect,
 } from '@xyflow/react';
 import { v4 as uuidv4 } from 'uuid';
-import { getSupportedBoards } from '../utils/opticValidation';
 import { NODE_TYPES } from '../constants/nodeTypes';
 
 export interface TrafficStream {
@@ -192,60 +191,8 @@ export function syncSplunkLabels(nodes: CustomNode[], edges: Edge[]): CustomNode
   });
 }
 
-export function syncOpticsOnTapConnection(nodes: CustomNode[], edges: Edge[]): CustomNode[] {
-  let modified = false;
-  const newNodes = nodes.map(node => {
-    // Only process hardware chassis nodes that are NOT TAPs (e.g. TA, HC)
-    if (node.type === 'hardwareNode' && !String(node.data?.model || '').includes('TAP')) {
-      const incomingEdges = edges.filter(e => e.target === node.id);
-      let tappedLinks = 0;
-      incomingEdges.forEach(e => {
-        const sourceNode = nodes.find(n => n.id === e.source);
-        if (sourceNode?.type === 'hardwareNode' && String(sourceNode.data?.model || '').includes('TAP')) {
-          tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
-        }
-      });
-      
-      if (tappedLinks > 0) {
-        const requiredOptics = tappedLinks * 2;
-        let optics = (node.data.optics as any[]) || [];
-        const totalOptics = optics.reduce((sum, opt) => sum + opt.qty, 0);
-        
-        if (totalOptics < requiredOptics) {
-          modified = true;
-          const diff = requiredOptics - totalOptics;
-          // Clone the array to avoid mutating original state directly
-          optics = [...optics];
-          
-          if (optics.length > 0) {
-            // Increment the first optic entry
-            optics[0] = { ...optics[0], qty: optics[0].qty + diff };
-          } else {
-            // No optics exist; inject a default supported optic
-            const supportedBoards = getSupportedBoards(node.data.model as string || '');
-            let board = 'Base Ports';
-            let optic = 'Unknown Optic';
-            if (supportedBoards.length > 0) {
-              board = supportedBoards[0].board;
-              optic = supportedBoards[0].supportedOptics[0] || 'SFP+ 10G';
-            }
-            optics.push({ board, optic, qty: diff });
-          }
-          
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              optics,
-            }
-          };
-        }
-      }
-    }
-    return node;
-  });
-  
-  return modified ? newNodes : nodes;
+export function syncOpticsOnTapConnection(nodes: CustomNode[], _edges: Edge[]): CustomNode[] {
+  return nodes;
 }
 
 // Create a default topology
