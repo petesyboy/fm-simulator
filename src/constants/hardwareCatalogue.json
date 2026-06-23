@@ -46,13 +46,17 @@
       "model": "TAP-M251T",
       "sku": "TAP-M251T",
       "type": "module",
-      "max_links": 6
+      "max_links": 6,
+      "base_ports": 24,
+      "licensed_ports": 24
     },
     {
       "model": "TAP-M253T",
       "sku": "TAP-M253T",
       "type": "module",
-      "max_links": 6
+      "max_links": 6,
+      "base_ports": 24,
+      "licensed_ports": 24
     },
     {
       "model": "TAP-M271T",
