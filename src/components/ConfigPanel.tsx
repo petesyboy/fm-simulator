@@ -500,6 +500,7 @@ const HardwareNodePanel: React.FC<{
           )}
 
           {(() => {
+            // 1. Calculate TAP link requirements
             const incomingTapEdges = edges.filter(e => e.target === node.id);
             let tappedLinks = 0;
             incomingTapEdges.forEach(e => {
@@ -508,17 +509,49 @@ const HardwareNodePanel: React.FC<{
                 tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
               }
             });
+
+            // 2. Count downstream tool destinations
+            const toolsReached = new Set<string>();
+            const visited = new Set<string>();
+            const queue = [node.id];
+            visited.add(node.id);
             
-            if (tappedLinks > 0) {
-              const totalOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
-              const requiredOptics = tappedLinks * 2;
-              if (totalOptics < requiredOptics) {
-                return (
-                  <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)', borderRadius: '4px', color: '#ffb74d', fontSize: '11px' }}>
-                    <strong>⚠️ Attention:</strong> You have <strong>{tappedLinks}</strong> connected TAP link(s). Every tapped link produces two outputs (northbound and southbound). Therefore, a minimum of <strong>{requiredOptics}</strong> optics must be installed to support this setup.
-                  </div>
-                );
-              }
+            while (queue.length > 0) {
+              const currentId = queue.shift()!;
+              const outbound = edges.filter(e => e.source === currentId);
+              outbound.forEach(e => {
+                if (!visited.has(e.target)) {
+                  visited.add(e.target);
+                  const targetNode = nodes.find(n => n.id === e.target);
+                  if (targetNode) {
+                    if (targetNode.type === 'toolNode') {
+                      toolsReached.add(targetNode.id);
+                    } else if (targetNode.type !== 'hardwareNode') {
+                      queue.push(e.target);
+                    }
+                  }
+                }
+              });
+            }
+
+            const numToolLinks = toolsReached.size;
+            const requiredTapOptics = tappedLinks * 2;
+            const totalRequiredOptics = requiredTapOptics + numToolLinks;
+            const totalOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
+
+            if (totalOptics < requiredTapOptics) {
+              return (
+                <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)', borderRadius: '4px', color: '#ffb74d', fontSize: '11px' }}>
+                  <strong>⚠️ Attention:</strong> You have <strong>{tappedLinks}</strong> connected TAP link(s). Every tapped link produces two outputs (northbound and southbound). Therefore, a minimum of <strong>{requiredTapOptics}</strong> optics must be installed to support this setup.
+                </div>
+              );
+            } else if (numToolLinks > 0 && totalOptics < totalRequiredOptics) {
+              const diff = totalRequiredOptics - totalOptics;
+              return (
+                <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(0, 150, 136, 0.1)', border: '1px solid rgba(0, 150, 136, 0.3)', borderRadius: '4px', color: '#80cbc4', fontSize: '11px' }}>
+                  <strong>💡 Suggestion:</strong> You have connected <strong>{numToolLinks}</strong> tool output(s). Since <strong>{requiredTapOptics}</strong> of your installed optics are consumed by TAP inputs, you need to install at least <strong>{diff}</strong> more optic(s) (total of <strong>{totalRequiredOptics}</strong>) to support the tools.
+                </div>
+              );
             }
             return null;
           })()}

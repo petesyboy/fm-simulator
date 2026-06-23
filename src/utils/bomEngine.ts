@@ -185,8 +185,9 @@ export function generateBom(
                 if (action) {
                   gsActions.add(action);
                 }
-              } else if (targetNode.type !== 'hardwareNode') {
-                // Keep traversing maps, filters, etc., unless we hit another hardware chassis
+              }
+              if (targetNode.type !== 'hardwareNode') {
+                // Keep traversing maps, filters, GigaSMART apps, etc., unless we hit another hardware chassis
                 queue.push(e.target);
               }
             }
