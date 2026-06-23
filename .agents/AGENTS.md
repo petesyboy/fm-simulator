@@ -9,3 +9,6 @@
 
 ## Hardware Node Rules
 - **CRITICAL RULE**: Every tapped link produces two outputs. A simplex cable is required to go into an SFP or QSFP depending upon fiber type and speed on a TA or HC unit. Because traffic is northbound and southbound, there are two optics required for each tapped link.
+
+## React Number Inputs
+- **CRITICAL RULE**: Do not aggressively validate integer bounds inside `onChange` handlers for React `<input type="number">` fields. When a user deletes a number, the value temporarily becomes an empty string, which evaluates to `NaN` and triggers a fallback reset if validated immediately. Instead, track the input state as a raw string and defer `parseInt()` and bounds validation to form submission (e.g., button clicks) or use a `<select>` dropdown for small bounded ranges.
