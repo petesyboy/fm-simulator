@@ -543,7 +543,9 @@ export const useStore = create<RFState>((set, get) => ({
       node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
     );
     let syncedNodes = syncSplunkLabels(updatedNodes, get().edges);
-    syncedNodes = syncOpticsOnTapConnection(syncedNodes, get().edges);
+    if (data.optics === undefined) {
+      syncedNodes = syncOpticsOnTapConnection(syncedNodes, get().edges);
+    }
     set({
       nodes: syncedNodes,
     });

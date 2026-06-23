@@ -1,5 +1,7 @@
 import skusData from '../constants/skus.json';
 import type { CustomNode } from '../store/store';
+import type { Edge } from '@xyflow/react';
+import hardwareCatalogue from '../constants/hardwareCatalogue.json';
 
 const skus: Record<string, string> = skusData as Record<string, string>;
 
@@ -26,10 +28,12 @@ export interface BomRow {
 
 export function generateBom(
   nodes: CustomNode[],
+  edges: Edge[],
   globalLicenseMode: 'HTL' | 'Perpetual',
   globalTermDuration: string
 ): BomRow[] {
   const rowMap: Record<string, BomRow> = {};
+  let totalTapModules = 0;
 
   const addRow = (sku: string, qty: number, type: BomRow['type'], term?: string) => {
     const description = skus[sku] || 'Unknown SKU';
@@ -45,19 +49,21 @@ export function generateBom(
 
     if (reqMatch && reqMatch[1]) {
       const depSku = reqMatch[1];
-      let depTerm = undefined;
-      if (depSku.endsWith('-SW-TM')) depTerm = term || globalTermDuration;
-      
-      if (rowMap[depSku]) {
-        rowMap[depSku].qty += qty;
-      } else {
-        rowMap[depSku] = { 
-          sku: depSku, 
-          qty, 
-          description: skus[depSku] || 'Required Dependency', 
-          term: depTerm, 
-          type: 'Dependency' 
-        };
+      if (depSku !== 'TAP-M100T' && depSku !== 'TAP-M200T') {
+        let depTerm = undefined;
+        if (depSku.endsWith('-SW-TM')) depTerm = term || globalTermDuration;
+        
+        if (rowMap[depSku]) {
+          rowMap[depSku].qty += qty;
+        } else {
+          rowMap[depSku] = { 
+            sku: depSku, 
+            qty, 
+            description: skus[depSku] || 'Required Dependency', 
+            term: depTerm, 
+            type: 'Dependency' 
+          };
+        }
       }
     }
   };
@@ -103,6 +109,11 @@ export function generateBom(
 
     if (model.includes('TAP')) {
       addRow(actualHwSku, 1, 'TAP');
+      
+      const tapEntry = hardwareCatalogue.taps.find(t => t.sku === actualHwSku);
+      if (tapEntry && tapEntry.type === 'module') {
+        totalTapModules += 1;
+      }
       return;
     }
 
@@ -153,7 +164,123 @@ export function generateBom(
       const opticSku = resolveOpticSku(opt.optic, model);
       addRow(opticSku, opt.qty, 'Optic');
     });
+
+    // Trace downstream paths to find GigaSMART action nodes connected to this HC chassis
+    if (model.includes('HC')) {
+      const gsActions = new Set<string>();
+      const visited = new Set<string>();
+      const queue = [node.id];
+      visited.add(node.id);
+      
+      while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        const outbound = edges.filter(e => e.source === currentId);
+        outbound.forEach(e => {
+          if (!visited.has(e.target)) {
+            visited.add(e.target);
+            const targetNode = nodes.find(n => n.id === e.target);
+            if (targetNode) {
+              if (targetNode.type === 'gigaSmartNode') {
+                const action = (targetNode.data?.actionType as string) || '';
+                if (action) {
+                  gsActions.add(action);
+                }
+              } else if (targetNode.type !== 'hardwareNode') {
+                // Keep traversing maps, filters, etc., unless we hit another hardware chassis
+                queue.push(e.target);
+              }
+            }
+          }
+        });
+      }
+
+      gsActions.forEach(action => {
+        let gsSku = '';
+        let gsTerm = undefined;
+        const isHtl = licenseMode === 'HTL';
+
+        if (action === 'Deduplication') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-DD1-SW-TM' : 'SMT-HC1-DD1';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-DD1-SW-TM' : 'SMT-HC1P-GEN3-DD1-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-DD1-SW-TM' : 'SMT-HC3-GEN3-DD1';
+          }
+        } 
+        else if (action === 'SSL Decrypt') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-INSSL-SW-TM' : 'SMT-HC1-INSSL';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-INSSL-SW-TM' : 'SMT-HC1P-GEN3-INSSL-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-INSSL-SW-TM' : 'SMT-HC3-GEN3-INSSL-PL';
+          }
+        } 
+        else if (action === 'Masking') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-BSE-SW-TM' : 'SMT-HC1-BSE';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-APF-SW-TM' : 'SMT-HC1P-GEN3-APF-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-APF-SW-TM' : 'SMT-HC3-GEN3-APF';
+          }
+        } 
+        else if (action === 'Packet Slicing') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-BSE-SW-TM' : 'SMT-HC1-BSE';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-AFS-SW-TM' : 'SMT-HC1P-GEN3-AFS-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-AFS-SW-TM' : 'SMT-HC3-GEN3-AFS-PL';
+          }
+        } 
+        else if (action === 'Header Stripping') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-HS1-SW-TM' : 'SMT-HC1-HS1';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-HS1-SW-TM' : 'SMT-HC1P-GEN3-HS1-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-HS1-SW-TM' : 'SMT-HC3-GEN3-HS1-PL';
+          }
+        } 
+        else if (action === 'Application Metadata' || action === 'AMX' || action === 'AMI') {
+          if (model.includes('HC1') && !model.includes('HC1-Plus')) {
+            gsSku = isHtl ? 'SMT-HC1-GEN2-AMI-SW-TM' : 'SMT-HC1-AMI';
+          } else if (model.includes('HC1-Plus') || model.includes('HC1P')) {
+            gsSku = isHtl ? 'SMT-HC1P-GEN3-AMI-SW-TM' : 'SMT-HC1P-GEN3-AMI-PL';
+          } else if (model.includes('HC3')) {
+            gsSku = isHtl ? 'SMT-HC3-GEN3-AMI-SW-TM' : 'SMT-HC3-GEN3-AMI';
+          }
+        }
+
+        if (gsSku) {
+          if (isHtl) gsTerm = termOverride;
+          addRow(gsSku, 1, 'Module', gsTerm);
+        }
+      });
+    }
   });
+
+  if (totalTapModules > 0) {
+    let numM200T = Math.floor(totalTapModules / 6);
+    let remainder = totalTapModules % 6;
+    let numM100T = 0;
+    if (remainder > 0) {
+      if (remainder <= 3) {
+        numM100T = 1;
+      } else {
+        numM200T += 1;
+      }
+    }
+    
+    if (numM100T > 0) {
+      addRow('TAP-M100T', numM100T, 'Dependency');
+    }
+    if (numM200T > 0) {
+      addRow('TAP-M200T', numM200T, 'Dependency');
+    }
+  }
 
   return Object.values(rowMap).sort((a, b) => a.type.localeCompare(b.type) || a.sku.localeCompare(b.sku));
 }

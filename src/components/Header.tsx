@@ -79,10 +79,11 @@ const BomModal: React.FC<{
   onClose: () => void;
 }> = ({ onClose }) => {
   const nodes = useStore((state) => state.nodes);
+  const edges = useStore((state) => state.edges);
   const globalLicenseMode = useStore((state) => state.projectLicenseMode);
   const globalTermDuration = useStore((state) => state.defaultTermDuration);
   
-  const items = generateBom(nodes, globalLicenseMode, globalTermDuration);
+  const items = generateBom(nodes, edges, globalLicenseMode, globalTermDuration);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>

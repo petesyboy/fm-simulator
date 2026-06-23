@@ -713,8 +713,8 @@ const InputNodePanel: React.FC<{
         </select>
       </FormGroup>
 
-      {/* SPAN-specific: port speed (affects traffic capacity label) */}
-      {configType === CONFIG_TYPES.SPAN && (
+      {/* Port speed (affects traffic capacity label and linkSpeed) */}
+      {(configType === CONFIG_TYPES.SPAN || configType === CONFIG_TYPES.TAP || configType === CONFIG_TYPES.ERSPAN || configType === CONFIG_TYPES.EAST_WEST || configType === CONFIG_TYPES.VMWARE) && (
         <FormGroup label="Port Speed">
           <select
             value={(node.data?.portSpeed as string) || '10G'}
@@ -722,6 +722,7 @@ const InputNodePanel: React.FC<{
           >
             <option value="1G">1 Gbps</option>
             <option value="10G">10 Gbps</option>
+            <option value="25G">25 Gbps</option>
             <option value="40G">40 Gbps</option>
             <option value="100G">100 Gbps</option>
           </select>
@@ -1171,6 +1172,17 @@ const ConfigPanel: React.FC = () => {
     // ERSPAN: parse the session ID as a number
     if (key === 'erspanId') {
       updates.erspanId = parseInt(val, 10) || 10;
+    }
+
+    // Sync portSpeed (string) to linkSpeed (numeric Mbps)
+    if (key === 'portSpeed') {
+      let speedMbps = 10000; // default 10G
+      if (val === '1G') speedMbps = 1000;
+      else if (val === '10G') speedMbps = 10000;
+      else if (val === '25G') speedMbps = 25000;
+      else if (val === '40G') speedMbps = 40000;
+      else if (val === '100G') speedMbps = 100000;
+      updates.linkSpeed = speedMbps;
     }
 
     // When the user changes the configType of an inputNode, update the label to match
