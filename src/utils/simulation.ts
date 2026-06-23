@@ -334,6 +334,10 @@ export const calculateSimulationStep = (
       return true;
     });
 
+    let forwardStream: TrajectoryStream | null = item.stream;
+    let dropBandwidth = 0;
+    let generatedMetadataStreams: TrajectoryStream[] = [];
+
     if (node.type === 'toolNode') {
       if (!toolReceivedStreams[node.id]) {
         toolReceivedStreams[node.id] = [];
@@ -342,9 +346,6 @@ export const calculateSimulationStep = (
       deliveredStreamIds.add(item.stream.id);
       continue;
     }
-
-    let forwardStream: TrajectoryStream | null = { ...item.stream };
-    let dropBandwidth = 0;
 
     if (node.type === 'filterNode') {
       const data = node.data as FilterNodeData;
@@ -485,11 +486,13 @@ export const calculateSimulationStep = (
             } else if (actionType === 'Application Metadata' || actionType === 'AMX' || actionType === 'AMI') {
               const scale = (actionType === 'AMX' || actionType === 'AMI') ? 0.015 : 0.03;
               const metadataBandwidth = item.stream.bandwidth * scale;
-              const drop = item.stream.bandwidth * (1 - scale);
-              nodeMetric.droppedPackets += drop;
-              item.stream.bandwidth = metadataBandwidth;
-              item.stream.trafficType = 'metadata';
-              item.stream.metadataFormat = (app.metadataFormat as 'CEF' | 'JSON') || 'CEF';
+              generatedMetadataStreams.push({
+                ...item.stream,
+                id: `${item.stream.id}-meta-${Math.random().toString(36).substring(7)}`,
+                bandwidth: metadataBandwidth,
+                trafficType: 'metadata',
+                metadataFormat: (app.metadataFormat as 'CEF' | 'JSON') || 'CEF'
+              });
             } else if (actionType === 'Packet Slicing') {
               item.stream.bandwidth *= 0.6;
             } else if (actionType === 'Header Stripping') {
@@ -524,15 +527,38 @@ export const calculateSimulationStep = (
       nodeMetric.txPackets += packetsPerSecond;
     }
 
-    if (forwardStream && forwardStream.bandwidth > 0 && outboundEdges.length > 0) {
+    const hasForwardStream = forwardStream && forwardStream.bandwidth > 0;
+    const hasMetadataStreams = generatedMetadataStreams.length > 0;
+
+    if ((hasForwardStream || hasMetadataStreams) && outboundEdges.length > 0) {
       outboundEdges.forEach((edge) => {
         activeEdgeSet.add(edge.id);
-        edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + forwardStream!.bandwidth;
-        queue.push({
-          nodeId: edge.target,
-          stream: { ...forwardStream! },
-          edgePath: [...item.edgePath, edge.id],
+        
+        // Forward the main packet stream
+        if (hasForwardStream) {
+          edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + forwardStream!.bandwidth;
+          queue.push({
+            nodeId: edge.target,
+            stream: { ...forwardStream! },
+            edgePath: [...item.edgePath, edge.id],
+          });
+        }
+        
+        // Forward any generated metadata streams on the SAME edge
+        generatedMetadataStreams.forEach((ms) => {
+          edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + ms.bandwidth;
+          queue.push({
+            nodeId: edge.target,
+            stream: { ...ms },
+            edgePath: [...item.edgePath, edge.id],
+          });
         });
+      });
+      
+      // Accumulate transmission stats for the metadata streams
+      generatedMetadataStreams.forEach((ms) => {
+        nodeMetric.txBps += ms.bandwidth;
+        nodeMetric.txPackets += ms.bandwidth * 250;
       });
     } else if (dropBandwidth > 0 && outboundEdges.length > 0) {
       outboundEdges.forEach((edge) => {
