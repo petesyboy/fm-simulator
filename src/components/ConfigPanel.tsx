@@ -127,6 +127,18 @@ const HardwareNodePanel: React.FC<{
   const edges = useStore(state => state.edges);
   const nodes = useStore(state => state.nodes);
 
+  // Calculate TAP link requirements and total optics
+  const incomingTapEdges = edges.filter(e => e.target === node.id);
+  let tappedLinks = 0;
+  incomingTapEdges.forEach(e => {
+    const sourceNode = nodes.find(n => n.id === e.source);
+    if (sourceNode?.data?.model?.includes('TAP')) {
+      tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
+    }
+  });
+
+  const totalOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
+
   const [selectedOpticBoard, setSelectedOpticBoard] = useState('');
   const [selectedOptic, setSelectedOptic] = useState('');
   const [qtyStr, setQtyStr] = useState('1');
@@ -537,6 +549,37 @@ const HardwareNodePanel: React.FC<{
         </div>
       )}
 
+      {/* Optics Deployment Status and Unterminated Tapped Links */}
+      {!model?.includes('TAP') && (
+        <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Optics Deployment Status</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: '#111', padding: '10px', borderRadius: '4px', border: '1px solid #333', fontSize: '11px', color: '#ccc' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Total Deployed Optics:</span>
+              <strong style={{ color: '#00e5ff', fontFamily: 'monospace' }}>{totalOptics}</strong>
+            </div>
+            {tappedLinks > 0 && (() => {
+              const unterminated = Math.max(0, tappedLinks - Math.floor(totalOptics / 2));
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #222', paddingTop: '6px', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Tapped Links Terminated:</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>
+                      {Math.min(tappedLinks, Math.floor(totalOptics / 2))} / {tappedLinks}
+                    </strong>
+                  </div>
+                  {unterminated > 0 && (
+                    <div style={{ color: '#ef5350', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                      <span>⚠️ {unterminated} tapped link(s) lack optics for termination ({unterminated * 2} optic(s) missing)</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
       {availableOpticBoards.length > 0 && (
         <div style={{ borderTop: '1px solid rgba(255, 152, 0, 0.2)', paddingTop: '10px', marginTop: '10px' }}>
           <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffb74d' }}>Install Optics</h4>
@@ -621,16 +664,6 @@ const HardwareNodePanel: React.FC<{
           )}
 
           {(() => {
-            // 1. Calculate TAP link requirements
-            const incomingTapEdges = edges.filter(e => e.target === node.id);
-            let tappedLinks = 0;
-            incomingTapEdges.forEach(e => {
-              const sourceNode = nodes.find(n => n.id === e.source);
-              if (sourceNode?.data?.model?.includes('TAP')) {
-                tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
-              }
-            });
-
             // 2. Count downstream tool destinations
             const toolsReached = new Set<string>();
             const visited = new Set<string>();
@@ -658,7 +691,6 @@ const HardwareNodePanel: React.FC<{
             const numToolLinks = toolsReached.size;
             const requiredTapOptics = tappedLinks * 2;
             const totalRequiredOptics = requiredTapOptics + numToolLinks;
-            const totalOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
 
             if (totalOptics < requiredTapOptics) {
               return (
