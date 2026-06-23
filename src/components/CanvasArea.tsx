@@ -269,6 +269,7 @@ const CanvasArea: React.FC = () => {
       if (type === NODE_TYPES.GIGASMART) {
         const hasHc = nodes.some(n => n.type === 'hardwareNode' && String(n.data?.model || '').includes('HC'));
         const hasTa = nodes.some(n => n.type === 'hardwareNode' && String(n.data?.model || '').includes('TA'));
+        
         if (!hasHc) {
           if (hasTa) {
             alert("GigaSMART is not supported on GigaVUE-TA series nodes. You must add a GigaVUE-HC series node to the canvas first.");
@@ -285,11 +286,21 @@ const CanvasArea: React.FC = () => {
       });
 
       if (advancedMode && type === NODE_TYPES.GIGASMART) {
+        // Find the closest HC hardware node that the mouse was dropped on.
+        // hw nodes are usually quite large, so we check a wide bounding box.
         const targetNode = nodes.find(n => {
           if (n.type !== 'hardwareNode') return false;
-          if (!n.measured?.width || !n.measured?.height) return false;
-          return position.x >= n.position.x && position.x <= n.position.x + n.measured.width &&
-                 position.y >= n.position.y && position.y <= n.position.y + n.measured.height;
+          
+          const w = n.measured?.width || n.width || 400;
+          const h = n.measured?.height || n.height || 200;
+          
+          const left = n.position.x - w / 2;
+          const right = n.position.x + w / 2;
+          const top = n.position.y - h / 2;
+          const bottom = n.position.y + h / 2;
+          
+          return position.x >= left && position.x <= right &&
+                 position.y >= top && position.y <= bottom;
         });
 
         if (targetNode) {
@@ -398,7 +409,7 @@ const CanvasArea: React.FC = () => {
         });
       }
     },
-    [screenToFlowPosition, addNode, addTrafficStream, nodes]
+    [screenToFlowPosition, addNode, addTrafficStream, nodes, advancedMode, updateNodeData]
   );
 
   const onSelectionChange = useCallback(({ nodes }: { nodes: CustomNode[] }) => {

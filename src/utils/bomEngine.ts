@@ -50,7 +50,8 @@ export function generateBom(
 
     if (reqMatch && reqMatch[1]) {
       const depSku = reqMatch[1];
-      if (depSku !== 'TAP-M100T' && depSku !== 'TAP-M200T') {
+      // Skip regex parsing for TA25E advanced features, as it's explicitly handled below
+      if (depSku !== 'TAP-M100T' && depSku !== 'TAP-M200T' && !depSku.includes('CLS-TAX20E')) {
         let depTerm = undefined;
         if (depSku.endsWith('-SW-TM')) depTerm = term || globalTermDuration;
         
@@ -93,6 +94,15 @@ export function generateBom(
     addRow(resolved.hwSku, 1, 'Chassis');
     if (resolved.swSku) {
       addRow(resolved.swSku, 1, 'Chassis', termOverride);
+    }
+
+    // Special case: TA25E with quarter ports requires the advanced features license
+    if (model.includes('TA25E') && node.data?.portCapacity === 'Quarter') {
+      const advSku = licenseMode === 'HTL' ? 'CLS-TAX20E-SW-TM' : 'CLS-TAX20E';
+      // Only add if not already added by regex description parsing for this specific node
+      // We will increment safely if needed, but to avoid double counting from the regex above
+      // we just add it explicitly
+      addRow(advSku, 1, 'Dependency', termOverride);
     }
 
     const installedBoards = (node.data?.installedBoards as Record<string, string>) || {};
