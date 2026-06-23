@@ -339,12 +339,11 @@ const CanvasArea: React.FC = () => {
 
       if (type === NODE_TYPES.INPUT) {
         // Auto-number new input ports by finding the highest existing index.
-        // This gives a friendly label like "SPAN Port 1/1/x3" automatically.
         let maxIndex = 0;
         nodes.forEach((node) => {
           if (node.type === NODE_TYPES.INPUT) {
             const labelStr = String(node.data?.label || '');
-            const match = labelStr.match(/(?:x|Tunnel\s+)(\d+)/i);
+            const match = labelStr.match(/(?:TAP\s+|Port\s+|Tunnel\s+|Traffic\s+|Estate\s+)(\d+)/i);
             if (match) {
               const idx = parseInt(match[1], 10);
               if (idx > maxIndex) maxIndex = idx;
@@ -353,15 +352,15 @@ const CanvasArea: React.FC = () => {
         });
         const nextIdx = maxIndex + 1;
 
-        if (initialData?.configType === CONFIG_TYPES.TAP) {
-          labelToUse = `TAP Device 1/1/x${nextIdx}`;
-        } else if (initialData?.configType === CONFIG_TYPES.SPAN) {
-          labelToUse = `SPAN Port 1/1/x${nextIdx}`;
+        if (initialData?.configType === 'Network Tap' || initialData?.configType === 'Virtual TAP' || initialData?.configType === CONFIG_TYPES.TAP) {
+          labelToUse = `Network TAP ${nextIdx}`;
+        } else if (initialData?.configType === 'SPAN Port' || initialData?.configType === CONFIG_TYPES.SPAN) {
+          labelToUse = `SPAN Port ${nextIdx}`;
         } else if (initialData?.configType === CONFIG_TYPES.ERSPAN) {
           labelToUse = `ERSPAN Tunnel ${nextIdx}`;
         } else if (initialData?.configType === CONFIG_TYPES.EAST_WEST) {
           labelToUse = `East/West Traffic ${nextIdx}`;
-        } else if (initialData?.configType === CONFIG_TYPES.VMWARE) {
+        } else if (initialData?.configType === CONFIG_TYPES.VMWARE || initialData?.configType === 'GigaVUE-VM') {
           labelToUse = `VMWare Estate ${nextIdx}`;
         }
       }
@@ -381,23 +380,13 @@ const CanvasArea: React.FC = () => {
       addNode(newNode);
 
       // Automatically generate a traffic stream whenever an input port is dropped.
-      // This gives immediate feedback that the port is "live" without needing manual setup.
       if (type === NODE_TYPES.INPUT) {
-        const speeds = [1, 10, 25, 40, 100];
-        const randomGbps = speeds[Math.floor(Math.random() * speeds.length)];
-        const linkSpeedMbps = randomGbps * 1000;
+        const speeds = [10, 25, 40, 100];
+        const randomOpticGbps = speeds[Math.floor(Math.random() * speeds.length)];
+        const streamGbps = Math.floor(Math.random() * randomOpticGbps) + 1;
+        const initialBandwidthMbps = streamGbps * 1000;
         
-        // Select a random starting utilization from 1%, 10%, 25%, 50%, 75%, or 100%
-        const randomUtilization = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00][Math.floor(Math.random() * 6)];
-        const initialBandwidthMbps = linkSpeedMbps * randomUtilization;
-        
-        let labelSpeedStr = '';
-        const bandwidthGbps = initialBandwidthMbps / 1000;
-        if (bandwidthGbps < 1) {
-          labelSpeedStr = `${Math.round(bandwidthGbps * 1000)} Mbps`;
-        } else {
-          labelSpeedStr = `${bandwidthGbps.toFixed(1).replace('.0', '')} Gbps`;
-        }
+        let labelSpeedStr = `${streamGbps} Gbps`;
 
         const randomSubnet = Math.floor(Math.random() * 254) + 1;
         const randomVlan = String(Math.floor(Math.random() * 900) + 100);
