@@ -21,6 +21,9 @@ import {
 } from './Icons';
 import { NODE_TYPES, ACTION_TYPES, CONFIG_TYPES } from '../constants/nodeTypes';
 import hardwareCatalogue from '../constants/hardwareCatalogue.json';
+import skusData from '../constants/skus.json';
+
+const skus: Record<string, string> = skusData as Record<string, string>;
 
 // Re-export icons so existing imports of these from 'Sidebar' continue to work.
 // Once all callers are updated to import from Icons.tsx directly these re-exports
@@ -309,7 +312,7 @@ const Sidebar: React.FC = () => {
               <div className="tree-content" style={{ maxHeight: '550px', overflowY: 'auto' }}>
                 <div className="demo-group-label" style={{ padding: '6px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TAPS</div>
                 {hardwareCatalogue.taps.filter(item => !['TAP-M100T', 'TAP-M200T', 'TAP-M202ULT'].includes(item.sku)).map((item) => (
-                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })}>
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })} title={skus[item.sku] || ''}>
                     <TapIcon size={18} />
                     <span>{item.model} {item.ru ? `(${item.ru < 1 ? '1/2' : item.ru} RU)` : ''}</span>
                   </div>
@@ -317,7 +320,7 @@ const Sidebar: React.FC = () => {
                 
                 <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>TA SERIES</div>
                 {hardwareCatalogue.ta_series.map((item) => (
-                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })}>
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })} title={skus[item.sku] || ''}>
                     {(item as any).image ? <img src={(item as any).image} style={{height:'16px', objectFit:'contain'}} alt={item.model} /> : <GreenCircleIcon size={18} />}
                     <span>{item.model}</span>
                   </div>
@@ -325,7 +328,7 @@ const Sidebar: React.FC = () => {
                 
                 <div className="demo-group-label" style={{ padding: '8px 12px 2px 12px', fontSize: '9px', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px' }}>HC SERIES</div>
                 {hardwareCatalogue.hc_series.map((item) => (
-                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })}>
+                  <div key={item.sku} className="tree-draggable" draggable onDragStart={(e) => onDragStart(e, NODE_TYPES.HARDWARE, item.model, { configType: 'Hardware', model: item.model, sku: item.sku, image: (item as any).image })} title={skus[item.sku] || ''}>
                     {(item as any).image ? <img src={(item as any).image} style={{height:'16px', objectFit:'contain'}} alt={item.model} /> : <MapIcon size={18} />}
                     <span>{item.model}</span>
                   </div>
