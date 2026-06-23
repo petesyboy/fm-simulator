@@ -603,7 +603,11 @@ export const calculateSimulationStep = (
         const capacity = getHardwareOpticCapacity(node);
         if (nodeMetric.rxBps + allowedBandwidth > capacity) {
           const excess = (nodeMetric.rxBps + allowedBandwidth) - capacity;
-          const drop = Math.min(excess, allowedBandwidth);
+          // Trim the bandwidth, but leave at least 5% of original stream bandwidth or 1 Mbps
+          const minPreserved = Math.max(1, item.stream.bandwidth * 0.05);
+          const maxDrop = Math.max(0, allowedBandwidth - minPreserved);
+          const drop = Math.min(excess, maxDrop);
+          
           nodeMetric.droppedPackets += drop * 250;
           allowedBandwidth -= drop;
         }
