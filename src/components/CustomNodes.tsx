@@ -357,6 +357,33 @@ export const GigaSmartNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
   const actionType = (data.actionType as string) || ACTION_TYPES.DEDUPLICATION;
+  const nodes = useStore((state) => state.nodes);
+  const edges = useStore((state) => state.edges);
+
+  // Trace upstream from this GigaSMART node to find a GigaVUE-HC chassis
+  let hasConnectedHc = false;
+  const visited = new Set<string>();
+  const queue = [id];
+  visited.add(id);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const incoming = edges.filter(e => e.target === currentId);
+    incoming.forEach(e => {
+      if (!visited.has(e.source)) {
+        visited.add(e.source);
+        const sourceNode = nodes.find(n => n.id === e.source);
+        if (sourceNode) {
+          if (sourceNode.type === 'hardwareNode' && String(sourceNode.data?.model || '').includes('HC')) {
+            hasConnectedHc = true;
+          } else if (sourceNode.type !== 'hardwareNode') {
+            queue.push(e.source);
+          }
+        }
+      }
+    });
+    if (hasConnectedHc) break;
+  }
 
   return (
     <>
@@ -408,6 +435,11 @@ export const GigaSmartNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 ? `Drop: ${formatBandwidth(metrics?.droppedPackets)}`
                 : `Tx: ${formatBandwidth(metrics?.txBps)}`}
             </span>
+          </div>
+        )}
+        {!hasConnectedHc && (
+          <div style={{ color: '#ef5350', fontSize: '9px', fontWeight: 'bold', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>⚠️ Requires HC Chassis</span>
           </div>
         )}
         <Handle type="source" position={Position.Right} id="out" />

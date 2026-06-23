@@ -264,6 +264,19 @@ const CanvasArea: React.FC = () => {
 
       const { type, label, initialData } = JSON.parse(rawData);
 
+      if (type === NODE_TYPES.GIGASMART) {
+        const hasHc = nodes.some(n => n.type === 'hardwareNode' && String(n.data?.model || '').includes('HC'));
+        const hasTa = nodes.some(n => n.type === 'hardwareNode' && String(n.data?.model || '').includes('TA'));
+        if (!hasHc) {
+          if (hasTa) {
+            alert("GigaSMART is not supported on GigaVUE-TA series nodes. You must add a GigaVUE-HC series node to the canvas first.");
+          } else {
+            alert("GigaSMART requires a GigaVUE-HC series node. Please add a GigaVUE-HC node to the canvas first.");
+          }
+          return;
+        }
+      }
+
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,

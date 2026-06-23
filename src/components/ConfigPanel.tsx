@@ -970,9 +970,41 @@ const GigaSmartPanel: React.FC<{
   onGenericChange: (key: string, val: string) => void;
 }> = ({ node, onGenericChange }) => {
   const actionType = (node.data?.actionType as string) || ACTION_TYPES.DEDUPLICATION;
+  const nodes = useStore((state) => state.nodes);
+  const edges = useStore((state) => state.edges);
+
+  // Trace upstream from this GigaSMART node to find a GigaVUE-HC chassis
+  let hasConnectedHc = false;
+  const visited = new Set<string>();
+  const queue = [node.id];
+  visited.add(node.id);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const incoming = edges.filter(e => e.target === currentId);
+    incoming.forEach(e => {
+      if (!visited.has(e.source)) {
+        visited.add(e.source);
+        const sourceNode = nodes.find(n => n.id === e.source);
+        if (sourceNode) {
+          if (sourceNode.type === 'hardwareNode' && String(sourceNode.data?.model || '').includes('HC')) {
+            hasConnectedHc = true;
+          } else if (sourceNode.type !== 'hardwareNode') {
+            queue.push(e.source);
+          }
+        }
+      }
+    });
+    if (hasConnectedHc) break;
+  }
 
   return (
     <>
+      {!hasConnectedHc && (
+        <div style={{ marginBottom: '12px', padding: '8px', background: 'rgba(239, 83, 80, 0.1)', border: '1px solid rgba(239, 83, 80, 0.3)', borderRadius: '4px', color: '#ef5350', fontSize: '11px', whiteSpace: 'pre-wrap' }}>
+          ⚠️ GigaSMART functions are only supported on GigaVUE-HC series nodes. Please connect this GigaSMART node downstream of an HC chassis.
+        </div>
+      )}
       <FormGroup label="GigaSMART Engine Operation">
         <select
           value={actionType}
