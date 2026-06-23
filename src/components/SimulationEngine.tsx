@@ -42,6 +42,7 @@ const SimulationEngine: React.FC = () => {
         ) {
           const lastUpdate  = (node.data?.lastDedupUpdate as number) || 0;
           const currentRate = node.data?.dedupRate as number;
+          const driftProfile = (node.data?.dedupDriftProfile as string) || 'volatile';
 
           if (!currentRate) {
             nodeDataPatches[node.id] = {
@@ -49,8 +50,15 @@ const SimulationEngine: React.FC = () => {
               dedupRate: Math.floor(Math.random() * 41) + 10,
               lastDedupUpdate: now,
             };
+          } else if (driftProfile === 'static') {
+            // Keep rate static, do not drift
           } else if (now - lastUpdate >= 2000) {
-            const delta   = Math.floor(Math.random() * 11) - 5;
+            let delta = 0;
+            if (driftProfile === 'stable') {
+              delta = Math.floor(Math.random() * 5) - 2; // slow drift +/- 2%
+            } else {
+              delta = Math.floor(Math.random() * 11) - 5; // original volatile drift +/- 5%
+            }
             const newRate = Math.min(50, Math.max(10, currentRate + delta));
             nodeDataPatches[node.id] = {
               ...nodeDataPatches[node.id],
@@ -66,6 +74,7 @@ const SimulationEngine: React.FC = () => {
             if (isDedupAction(app.actionType || '')) {
               const lastUpdate = app.lastDedupUpdate || 0;
               const currentRate = app.dedupRate;
+              const driftProfile = app.dedupDriftProfile || 'volatile';
 
               if (currentRate === undefined || currentRate === null) {
                 appsUpdated = true;
@@ -74,8 +83,15 @@ const SimulationEngine: React.FC = () => {
                   dedupRate: Math.floor(Math.random() * 41) + 10,
                   lastDedupUpdate: now,
                 };
+              } else if (driftProfile === 'static') {
+                return app;
               } else if (now - lastUpdate >= 2000) {
-                const delta = Math.floor(Math.random() * 11) - 5;
+                let delta = 0;
+                if (driftProfile === 'stable') {
+                  delta = Math.floor(Math.random() * 5) - 2;
+                } else {
+                  delta = Math.floor(Math.random() * 11) - 5;
+                }
                 const newRate = Math.min(50, Math.max(10, currentRate + delta));
                 appsUpdated = true;
                 return {

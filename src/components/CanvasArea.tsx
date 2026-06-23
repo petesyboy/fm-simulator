@@ -200,12 +200,77 @@ const CanvasArea: React.FC = () => {
     const isActive = activeEdges.includes(edge.id);
     const isBlocked = blockedEdges.includes(edge.id);
     
+    const srcNode = nodes.find((n) => n.id === edge.source);
+    const targetNode = nodes.find((n) => n.id === edge.target);
+
+    // Determine if it's a metadata edge
+    const isMetadata = (() => {
+      if (!srcNode) return false;
+      if (srcNode.type === 'gigaSmartNode') {
+        const actionType = srcNode.data?.actionType;
+        if (actionType === 'Application Metadata' || actionType === 'AMX' || actionType === 'AMI') {
+          return true;
+        }
+      }
+      if (srcNode.type === 'hardwareNode') {
+        const apps = (srcNode.data?.gigaSmartApps as any[]) || [];
+        const hasMetadataApp = apps.some(app => 
+          app.actionType === 'Application Metadata' || app.actionType === 'AMX' || app.actionType === 'AMI'
+        );
+        if (hasMetadataApp && targetNode?.type === 'toolNode' && targetNode.data?.configType === 'Metadata Tool') {
+          return true;
+        }
+      }
+      
+      // General traceback
+      const visited = new Set<string>();
+      const queue: string[] = [edge.source];
+      visited.add(edge.source);
+      let hasMetadataOrigin = false;
+      let hasPacketOrigin = false;
+
+      while (queue.length > 0) {
+        const currId = queue.shift()!;
+        const currNode = nodes.find(n => n.id === currId);
+        if (!currNode) continue;
+
+        if (currNode.type === 'inputNode') {
+          hasPacketOrigin = true;
+        } else if (currNode.type === 'gigaSmartNode') {
+          const actionType = currNode.data?.actionType;
+          if (actionType === 'Application Metadata' || actionType === 'AMX' || actionType === 'AMI') {
+            hasMetadataOrigin = true;
+          } else {
+            hasPacketOrigin = true;
+          }
+        } else if (currNode.type === 'hardwareNode') {
+          const apps = (currNode.data?.gigaSmartApps as any[]) || [];
+          if (apps.some(app => app.actionType === 'Application Metadata' || app.actionType === 'AMX' || app.actionType === 'AMI')) {
+            hasMetadataOrigin = true;
+          }
+          const incoming = edges.filter(e => e.target === currId);
+          if (incoming.length === 0) {
+            hasPacketOrigin = true;
+          }
+        }
+
+        const incomingEdges = edges.filter(e => e.target === currId);
+        incomingEdges.forEach(e => {
+          if (!visited.has(e.source)) {
+            visited.add(e.source);
+            queue.push(e.source);
+          }
+        });
+      }
+      return (hasMetadataOrigin && !hasPacketOrigin) || (targetNode?.type === 'toolNode' && targetNode.data?.configType === 'Metadata Tool');
+    })();
+
     let className = '';
     let animated = false;
     
     if (isRunning) {
       if (isActive) {
-        className = 'active-flow';
+        className = isMetadata ? 'metadata-flow' : 'active-flow';
         animated = true;
       } else if (isBlocked) {
         className = 'blocked-flow';
@@ -214,8 +279,6 @@ const CanvasArea: React.FC = () => {
 
     // Dynamic Edge Labeling for GigaSMART Application Metadata
     let label = edge.label;
-    const srcNode = nodes.find((n) => n.id === edge.source);
-    const targetNode = nodes.find((n) => n.id === edge.target);
     
     if (srcNode?.type === 'gigaSmartNode' && 
         (srcNode.data?.actionType === 'Application Metadata' || 
@@ -233,11 +296,11 @@ const CanvasArea: React.FC = () => {
 
     if (srcTool === 'Splunk' && tgtConfig === 'Storage Tool') {
       // Flow from target (S3) back to source (Splunk)
-      className = 'reverse-flow';
+      className = isMetadata ? 'reverse-metadata-flow' : 'reverse-flow';
       animated = true;
     } else if (srcConfig === 'Storage Tool' && tgtTool === 'Splunk') {
       // Flow from source (S3) to target (Splunk)
-      className = 'active-flow';
+      className = isMetadata ? 'metadata-flow' : 'active-flow';
       animated = true;
     }
     
@@ -247,12 +310,58 @@ const CanvasArea: React.FC = () => {
       const throughputLabel = bps >= 1000 ? `${(bps / 1000).toFixed(1)} Gbps` : `${bps.toFixed(0)} Mbps`;
       label = label ? `${label} | ${throughputLabel}` : throughputLabel;
     }
+
+    // Calculate dynamic animation speed based on link utilization
+    const getCapacity = (): number => {
+      if (!srcNode) return 10000;
+      if (srcNode.type === 'inputNode') {
+        return (srcNode.data?.linkSpeed as number || 10) * 1000; // Gbps to Mbps
+      }
+      if (srcNode.type === 'hardwareNode') {
+        const model = String(srcNode.data?.model || '').toUpperCase();
+        if (model.includes('TA400') || model.includes('HC3')) return 400000;
+        if (model.includes('TA200') || model.includes('HC1-PLUS')) return 100000;
+        if (model.includes('HC1') || model.includes('TAP')) return 10000;
+        
+        // If there's optics defined
+        const optics = (srcNode.data?.optics as { optic: string, qty: number }[]) || [];
+        if (optics.length > 0) {
+          let cap = 0;
+          for (const opt of optics) {
+            if (!opt.optic) continue;
+            const name = opt.optic.toUpperCase();
+            let speed = 0;
+            if (name.includes('400G') || name.startsWith('QDD-')) speed = 400000;
+            else if (name.includes('100G') || name.startsWith('Q28-')) speed = 100000;
+            else if (name.includes('40G') || name.startsWith('QSF-')) speed = 40000;
+            else if (name.includes('25G') || name.startsWith('SFP-55')) speed = 25000;
+            else if (name.includes('10G') || name.startsWith('SFP-53')) speed = 10000;
+            else if (name.includes('1G') || name.startsWith('SFP-50')) speed = 1000;
+            cap += speed * opt.qty;
+          }
+          if (cap > 0) return cap;
+        }
+      }
+      return 10000; // default 10 Gbps (10000 Mbps)
+    };
+
+    let style: React.CSSProperties = {};
+    if (isRunning && bps !== undefined && bps > 0) {
+      const capacity = getCapacity();
+      const utilization = Math.min(1.0, bps / capacity);
+      // Map utilization (0 to 1) to animation duration (2.0s down to 0.2s)
+      const duration = 2.0 - 1.8 * utilization;
+      style = {
+        animationDuration: `${duration.toFixed(2)}s`
+      };
+    }
     
     return {
       ...edge,
       className,
       animated,
       label,
+      style,
     };
   });
 
@@ -302,13 +411,23 @@ const CanvasArea: React.FC = () => {
           const w = n.measured?.width || n.width || 400;
           const h = n.measured?.height || n.height || 200;
           
-          const left = n.position.x - w / 2;
-          const right = n.position.x + w / 2;
-          const top = n.position.y - h / 2;
-          const bottom = n.position.y + h / 2;
-          
-          return position.x >= left && position.x <= right &&
-                 position.y >= top && position.y <= bottom;
+          // Check 1: Center-origin ([0.5, 0.5])
+          const cLeft = n.position.x - w / 2;
+          const cRight = n.position.x + w / 2;
+          const cTop = n.position.y - h / 2;
+          const cBottom = n.position.y + h / 2;
+          const insideCenter = position.x >= cLeft && position.x <= cRight &&
+                               position.y >= cTop && position.y <= cBottom;
+                               
+          // Check 2: Top-left-origin ([0, 0])
+          const tlLeft = n.position.x;
+          const tlRight = n.position.x + w;
+          const tlTop = n.position.y;
+          const tlBottom = n.position.y + h;
+          const insideTopLeft = position.x >= tlLeft && position.x <= tlRight &&
+                                position.y >= tlTop && position.y <= tlBottom;
+                                
+          return insideCenter || insideTopLeft;
         });
 
         if (targetNode) {

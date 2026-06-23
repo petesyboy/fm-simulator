@@ -508,6 +508,22 @@
   }
 }
 
+/* Active metadata flowing traffic edge styling */
+.react-flow__edge.metadata-flow .react-flow__edge-path {
+  stroke: #ff9800 !important;
+  stroke-dasharray: 4 3 !important;
+  filter: drop-shadow(0 0 4px rgba(255, 152, 0, 0.7)) !important;
+  animation: edge-flow-dash 1.2s linear infinite;
+}
+
+/* Reverse metadata flowing edge styling for "pull" semantics */
+.react-flow__edge.reverse-metadata-flow .react-flow__edge-path {
+  stroke: #ff9800 !important;
+  stroke-dasharray: 4 3 !important;
+  filter: drop-shadow(0 0 4px rgba(255, 152, 0, 0.7)) !important;
+  animation: edge-flow-dash-reverse 1.2s linear infinite;
+}
+
 
 /* 4. Canvas Node Styles (Charcoal Boxes) */
 .custom-node {

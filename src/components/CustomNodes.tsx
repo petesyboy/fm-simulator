@@ -25,6 +25,32 @@ import {
 import { CONFIG_TYPES, ACTION_TYPES, isMetadataAction, isDedupAction } from '../constants/nodeTypes';
 import { resolveNodeSkus } from '../utils/skuResolver';
 
+const getTapDetails = (sku: string, model: string) => {
+  const isULT = sku.includes('ULT') || model.includes('ULT');
+  const isMM = sku.includes('251') || sku.includes('271') || sku.includes('451') || model.toLowerCase().includes('multi-mode') || model.toLowerCase().includes('mm');
+  const isSM = sku.includes('253') || sku.includes('273') || sku.includes('453') || model.toLowerCase().includes('single-mode') || model.toLowerCase().includes('sm');
+  
+  let media = '';
+  let splitRatio = '50/50';
+  let wavelength = '';
+
+  if (isMM) {
+    media = 'MMF (OM5)';
+    wavelength = '850nm';
+  } else if (isSM) {
+    media = 'SMF (OS2)';
+    wavelength = '1310nm';
+  }
+
+  if (sku.includes('271') || sku.includes('273')) {
+    splitRatio = '70/30';
+  } else if (sku.includes('451') || sku.includes('453')) {
+    splitRatio = '60/40';
+  }
+
+  return { media, splitRatio, wavelength, isULT };
+};
+
 // ─── InputNode ────────────────────────────────────────────────────────────────
 
 export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
@@ -488,6 +514,9 @@ export const HardwareNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     else if (model.includes('HC')) iconComponent = <MapIcon size={20} />;
   }
 
+  const isTap = model.includes('TAP');
+  const tapInfo = isTap ? getTapDetails(resolved.hwSku, model) : null;
+
   return (
     <>
       <NodeResizer minWidth={170} minHeight={75} isVisible={selected} />
@@ -503,6 +532,59 @@ export const HardwareNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="node-meta" style={{ fontSize: '9px', opacity: 0.8 }}>
           <span>SKU: {displaySku}</span>
         </div>
+        {isTap && tapInfo && (
+          <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '8px',
+              background: 'rgba(0, 229, 255, 0.15)',
+              color: '#00e5ff',
+              border: '1px solid rgba(0, 229, 255, 0.3)',
+              borderRadius: '3px',
+              padding: '1px 4px',
+              fontWeight: 'bold'
+            }}>
+              ⚖️ {tapInfo.splitRatio}
+            </span>
+            {tapInfo.media && (
+              <span style={{
+                fontSize: '8px',
+                background: tapInfo.media.includes('SMF') ? 'rgba(255, 235, 59, 0.15)' : 'rgba(0, 230, 118, 0.15)',
+                color: tapInfo.media.includes('SMF') ? '#ffd54f' : '#00e676',
+                border: tapInfo.media.includes('SMF') ? '1px solid rgba(255, 235, 59, 0.3)' : '1px solid rgba(0, 230, 118, 0.3)',
+                borderRadius: '3px',
+                padding: '1px 4px',
+                fontWeight: 'bold'
+              }}>
+                {tapInfo.media}
+              </span>
+            )}
+            {tapInfo.wavelength && (
+              <span style={{
+                fontSize: '8px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#ccc',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '3px',
+                padding: '1px 4px'
+              }}>
+                λ {tapInfo.wavelength}
+              </span>
+            )}
+            {tapInfo.isULT && (
+              <span style={{
+                fontSize: '8px',
+                background: 'rgba(244, 67, 54, 0.15)',
+                color: '#ff8a80',
+                border: '1px solid rgba(244, 67, 54, 0.3)',
+                borderRadius: '3px',
+                padding: '1px 4px',
+                fontWeight: 'bold'
+              }}>
+                🔒 ULT
+              </span>
+            )}
+          </div>
+        )}
         
         {/* Render internal GigaSMART apps in Advanced Mode */}
         {!!(data.gigaSmartApps && Array.isArray(data.gigaSmartApps) && data.gigaSmartApps.length > 0) && (
