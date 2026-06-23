@@ -285,3 +285,129 @@ export function generateBom(
 
   return Object.values(rowMap).sort((a, b) => a.type.localeCompare(b.type) || a.sku.localeCompare(b.sku));
 }
+
+// ─── Global Configuration Validator ───────────────────────────────────────────
+
+import { NODE_TYPES } from '../constants/nodeTypes';
+
+export interface ConfigurationValidationError {
+  type: 'no_hc_for_gigasmart' | 'gigasmart_not_connected_to_hc' | 'insufficient_optics';
+  message: string;
+  nodeId?: string;
+  nodeLabel?: string;
+}
+
+export function validateConfiguration(
+  nodes: CustomNode[],
+  edges: Edge[]
+): ConfigurationValidationError[] {
+  const errors: ConfigurationValidationError[] = [];
+
+  // 1. Check for GigaSMART nodes without HC chassis
+  const gigasmartNodes = nodes.filter((n) => n.type === NODE_TYPES.GIGASMART);
+  const hcNodes = nodes.filter(
+    (n) => n.type === NODE_TYPES.HARDWARE && String(n.data?.model || '').includes('HC')
+  );
+
+  if (gigasmartNodes.length > 0 && hcNodes.length === 0) {
+    errors.push({
+      type: 'no_hc_for_gigasmart',
+      message: 'GigaSMART functions are placed on the canvas, but no GigaVUE-HC chassis is present. GigaSMART requires a GigaVUE-HC series chassis.',
+    });
+  }
+
+  // 2. Check for GigaSMART nodes not connected to an HC chassis
+  gigasmartNodes.forEach((gsNode) => {
+    let hasConnectedHc = false;
+    const visited = new Set<string>();
+    const queue = [gsNode.id];
+    visited.add(gsNode.id);
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const incoming = edges.filter((e) => e.target === currentId);
+      incoming.forEach((e) => {
+        if (!visited.has(e.source)) {
+          visited.add(e.source);
+          const sourceNode = nodes.find((n) => n.id === e.source);
+          if (sourceNode) {
+            if (sourceNode.type === NODE_TYPES.HARDWARE && String(sourceNode.data?.model || '').includes('HC')) {
+              hasConnectedHc = true;
+            } else if (sourceNode.type !== NODE_TYPES.HARDWARE) {
+              queue.push(e.source);
+            }
+          }
+        }
+      });
+      if (hasConnectedHc) break;
+    }
+
+    if (!hasConnectedHc) {
+      errors.push({
+        type: 'gigasmart_not_connected_to_hc',
+        nodeId: gsNode.id,
+        nodeLabel: String(gsNode.data?.label || 'GigaSMART Function'),
+        message: `GigaSMART function "${gsNode.data?.label || 'GigaSMART'}" is not connected to a GigaVUE-HC chassis.`,
+      });
+    }
+  });
+
+  // 3. Check for chassis nodes with insufficient optics
+  const chassisNodes = nodes.filter(
+    (n) => n.type === NODE_TYPES.HARDWARE && !String(n.data?.model || '').includes('TAP')
+  );
+
+  chassisNodes.forEach((chassis) => {
+    const installedOptics = (chassis.data?.optics as { qty: number }[]) || [];
+    const totalInstalledOptics = installedOptics.reduce((sum, opt) => sum + opt.qty, 0);
+
+    // Calculate TAP link requirements
+    const incomingTapEdges = edges.filter((e) => e.target === chassis.id);
+    let tappedLinks = 0;
+    incomingTapEdges.forEach((e) => {
+      const sourceNode = nodes.find((n) => n.id === e.source);
+      if (sourceNode?.data?.model?.includes('TAP')) {
+        tappedLinks += (sourceNode.data.tappedLinksCount as number) ?? 1;
+      }
+    });
+
+    // Count downstream tool destinations
+    const toolsReached = new Set<string>();
+    const visited = new Set<string>();
+    const queue = [chassis.id];
+    visited.add(chassis.id);
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const outbound = edges.filter((e) => e.source === currentId);
+      outbound.forEach((e) => {
+        if (!visited.has(e.target)) {
+          visited.add(e.target);
+          const targetNode = nodes.find((n) => n.id === e.target);
+          if (targetNode) {
+            if (targetNode.type === 'toolNode') {
+              toolsReached.add(targetNode.id);
+            } else if (targetNode.type !== NODE_TYPES.HARDWARE) {
+              queue.push(e.target);
+            }
+          }
+        }
+      });
+    }
+
+    const numToolLinks = toolsReached.size;
+    const requiredTapOptics = tappedLinks * 2;
+    const totalRequiredOptics = requiredTapOptics + numToolLinks;
+
+    if (totalInstalledOptics < totalRequiredOptics) {
+      errors.push({
+        type: 'insufficient_optics',
+        nodeId: chassis.id,
+        nodeLabel: String(chassis.data?.model || 'Chassis'),
+        message: `Chassis "${chassis.data?.model || 'Chassis'}" (labeled: "${chassis.data?.label || ''}") has insufficient optics installed. Needs at least ${totalRequiredOptics} optics (currently has ${totalInstalledOptics}).`,
+      });
+    }
+  });
+
+  return errors;
+}

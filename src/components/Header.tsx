@@ -71,9 +71,7 @@ const ConfirmModal: React.FC<{
   </div>
 );
 
-// ─── BOM Modal ────────────────────────────────────────────────────────────────
-
-import { generateBom } from '../utils/bomEngine';
+import { generateBom, validateConfiguration } from '../utils/bomEngine';
 
 const BomModal: React.FC<{
   onClose: () => void;
@@ -84,11 +82,28 @@ const BomModal: React.FC<{
   const globalTermDuration = useStore((state) => state.defaultTermDuration);
   
   const items = generateBom(nodes, edges, globalLicenseMode, globalTermDuration);
+  const validationErrors = validateConfiguration(nodes, edges);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
       <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '24px', width: '900px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 48px rgba(0,0,0,0.8)' }}>
         <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#ffb74d' }}>Bill of Materials (BOM)</h3>
+        
+        {validationErrors.length > 0 && (
+          <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(239, 83, 80, 0.08)', border: '1px solid rgba(239, 83, 80, 0.3)', borderRadius: '6px', color: '#ef5350' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ⚠️ Configuration Attention Required (Not 100% Valid Configuration)
+            </h4>
+            <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#aaa', lineHeight: '1.4' }}>
+              The current canvas configuration has unresolved errors. This bill of materials may be incomplete or invalid:
+            </p>
+            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {validationErrors.map((err, i) => (
+                <li key={i} style={{ color: '#ffb74d' }}>{err.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
           {items.length === 0 ? (
@@ -162,6 +177,8 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
   const clearCanvas    = useStore((state) => state.clearCanvas);
   const loadDemo       = useStore((state) => state.loadDemo);
   const advancedMode   = useStore((state) => state.advancedMode);
+  const nodes          = useStore((state) => state.nodes);
+  const edges          = useStore((state) => state.edges);
 
   // Local UI state for the toast and confirm modal
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -230,11 +247,23 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
               )}
             </div>
 
-            {advancedMode && (
-              <button className="header-btn" style={{ background: 'rgba(255, 152, 0, 0.2)', color: '#ffb74d', borderColor: 'rgba(255, 152, 0, 0.5)' }} onClick={() => setShowBom(true)}>
-                📋 View BOM
-              </button>
-            )}
+            {advancedMode && (() => {
+              const validationErrors = validateConfiguration(nodes, edges);
+              const hasErrors = validationErrors.length > 0;
+              return (
+                <button 
+                  className="header-btn" 
+                  style={{ 
+                    background: hasErrors ? 'rgba(239, 83, 80, 0.2)' : 'rgba(255, 152, 0, 0.2)', 
+                    color: hasErrors ? '#ef5350' : '#ffb74d', 
+                    borderColor: hasErrors ? 'rgba(239, 83, 80, 0.5)' : 'rgba(255, 152, 0, 0.5)' 
+                  }} 
+                  onClick={() => setShowBom(true)}
+                >
+                  📋 View BOM{hasErrors ? ' (⚠️ Attention)' : ''}
+                </button>
+              );
+            })()}
 
             {/* Save button now opens the multi-slot modal in App.tsx */}
             <button className="header-btn primary" onClick={onSaveClick}>
