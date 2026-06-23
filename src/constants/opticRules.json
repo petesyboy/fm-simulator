@@ -1,7 +1,6 @@
 {
   "GigaVUE-HC1": {
     "HC1-X12G4 (Main board)": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -20,7 +19,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC1-D25A24": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -39,7 +37,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "PRT-HC1-X12": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -58,7 +55,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "PRT-HC1-Q04X08": [
-      "Cable",
       "QSF-502 (40G QSFP+ SR4)",
       "QSF-502T (40G QSFP+ SR4)",
       "QSF-503T (40G QSFP+ LR4)",
@@ -88,7 +84,6 @@
   },
   "GigaVUE-HC1-Plus": {
     "HC1P-C04X08 (Main Board)": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -129,7 +124,6 @@
       "SFP-553T (25G SFP28 LR)"
     ],
     "PRT-HC1-Q04X08": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -170,7 +164,6 @@
       "SFP-553T (25G SFP28 LR)"
     ],
     "BPS-HC1-D25A24": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -209,7 +202,6 @@
   },
   "GigaVUE-HCT": {
     "HCT-C02 (Main Board)": [
-      "Cable",
       "QSF-502 (40G QSFP+ SR4)",
       "QSF-502T (40G QSFP+ SR4)",
       "QSF-503T (40G QSFP+ LR4)",
@@ -221,7 +213,6 @@
       "QSF-508 (40G QSFP+ SWDM4)"
     ],
     "PRT-HC1-Q04X08": [
-      "Cable",
       "QSF-502 (40G QSFP+ SR4)",
       "QSF-502T (40G QSFP+ SR4)",
       "QSF-503T (40G QSFP+ LR4)",
@@ -240,7 +231,6 @@
       "SFP-505T (1G SFP FX)"
     ],
     "PRT-HC1-X12": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -259,7 +249,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC1-D25A24": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -280,7 +269,6 @@
   },
   "GigaVUE-HC2 CCv1                                                 Final GVOS Version : 6.5.00": {
     "PRT-HC0-X24": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -310,7 +298,6 @@
       "QSF-508 (40G QSFP+ SWDM4)"
     ],
     "BPS-HC0-D25A4G": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -339,7 +326,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC0-D25B4G": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -358,7 +344,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC0-D35C4G": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -377,7 +362,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "SMT-HC0-Q02X08": [
-      "Cable",
       "QSF-502 (40G QSFP+ SR4)",
       "QSF-502T (40G QSFP+ SR4)",
       "QSF-503T (40G QSFP+ LR4)",
@@ -405,7 +389,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "SMT-HC0-X16": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -426,7 +409,6 @@
   },
   "GigaVUE-HC2 CCv2                                                  Final GVOS Version : 6.5.00": {
     "PRT-HC0-X24": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -456,7 +438,6 @@
       "QSF-508 (40G QSFP+ SWDM4)"
     ],
     "BPS-HC0-D25A4G": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -475,7 +456,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC0-D25B4G": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -494,7 +474,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC0-D35C4G": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -513,7 +492,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC0-Q25A28": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -532,7 +510,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "SMT-HC0-X16": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -551,7 +528,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "SMT-HC0-Q02X08": [
-      "Cable",
       "QSF-502 (40G QSFP+ SR4)",
       "QSF-502T (40G QSFP+ SR4)",
       "QSF-503T (40G QSFP+ LR4)",
@@ -593,7 +569,6 @@
   },
   "GigaVUE-HC3 CCv1 \nFinal GVOS Version : 5.16.00": {
     "PRT-HC3-X24": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -647,7 +622,6 @@
       "QSF-508 (40G QSFP+ SWDM4)"
     ],
     "BPS-HC3-C25F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -659,7 +633,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC3-C35F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -671,7 +644,6 @@
       "SFP-535 (10G SFP+ LRM)"
     ],
     "BPS-HC3-Q35F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -685,7 +657,6 @@
   },
   "GigaVUE-HC3 CCv2": {
     "PRT-HC3-X24": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -763,7 +734,6 @@
       "QSF-508 (40G QSFP+ SWDM4)"
     ],
     "BPS-HC3-C25F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -778,7 +748,6 @@
       "SFP-553T (25G SFP28 LR)"
     ],
     "BPS-HC3-C35F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -793,7 +762,6 @@
       "SFP-553T (25G SFP28 LR)"
     ],
     "BPS-HC3-Q35F2G": [
-      "Cable",
       "SFP-531 (10G SFP+ Copper)",
       "SFP-531T (10G SFP+ Copper)",
       "SFP-532 (10G SFP+ SR)",
@@ -831,7 +799,6 @@
   },
   "GigaVUE-TA25": {
     "Base Ports": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -874,7 +841,6 @@
   },
   "GigaVUE-TA25E": {
     "Base Ports": [
-      "Cable",
       "SFP-501 (1G SFP Copper)",
       "SFP-501T (1G SFP Copper)",
       "SFP-502 (1G SFP SX)",
@@ -917,7 +883,6 @@
   },
   "GigaVUE-TA100": {
     "Base Ports": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -941,7 +906,6 @@
   },
   "GigaVUE-TA200": {
     "Base Ports": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -965,7 +929,6 @@
   },
   "GigaVUE-TA200E": {
     "Base Ports": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -989,7 +952,6 @@
   },
   "GigaVUE-TA400": {
     "Base Ports": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
@@ -1017,7 +979,6 @@
   },
   "GigaVUE-TA400E": {
     "Base Ports": [
-      "Cable",
       "Q28-502T (100G QSFP28 SR4)",
       "Q28-503 (100G QSFP28 LR4)",
       "Q28-503T (100G QSFP28 LR4)",
