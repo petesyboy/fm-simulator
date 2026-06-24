@@ -51,6 +51,25 @@ const getTapDetails = (sku: string, model: string) => {
   return { media, splitRatio, wavelength, isULT };
 };
 
+const getConditionsSummary = (conditions: MapCondition[]) => {
+  if (!conditions || conditions.length === 0) return 'No rules';
+  return conditions.map((c) => {
+    let fieldLabel = '';
+    switch (c.field) {
+      case 'vlan': fieldLabel = 'VLAN'; break;
+      case 'protocol': fieldLabel = 'Proto'; break;
+      case 'portdst': fieldLabel = 'Dst Port'; break;
+      case 'portsrc': fieldLabel = 'Src Port'; break;
+      case 'ipdst': fieldLabel = 'Dst IP'; break;
+      case 'ipsrc': fieldLabel = 'Src IP'; break;
+      case 'ipver': fieldLabel = 'IP Ver'; break;
+      default: fieldLabel = c.field;
+    }
+    return c.value ? `${fieldLabel}(${c.value})` : fieldLabel;
+  }).join(', ');
+};
+
+
 // ─── InputNode ────────────────────────────────────────────────────────────────
 
 export const InputNode: React.FC<NodeProps> = ({ id, data, selected }) => {
@@ -145,6 +164,21 @@ export const MapNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             P1
           </div>
         </div>
+
+        {conditions.length > 0 && (
+          <div style={{
+            fontSize: '9px',
+            color: '#b2dfdb',
+            marginTop: '6px',
+            padding: '4px 6px',
+            background: 'rgba(0, 150, 136, 0.1)',
+            borderRadius: '3px',
+            border: '1px solid rgba(0, 150, 136, 0.2)',
+            wordBreak: 'break-all'
+          }}>
+            🎯 {getConditionsSummary(conditions)}
+          </div>
+        )}
 
         {isRunning && (
           <div className="node-metrics" style={{ marginTop: '4px' }}>
@@ -516,6 +550,7 @@ export const HardwareNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   const isTap = model.includes('TAP');
   const tapInfo = isTap ? getTapDetails(resolved.hwSku, model) : null;
+  const conditions = (data.conditions as MapCondition[]) || [];
 
   return (
     <>
@@ -583,6 +618,26 @@ export const HardwareNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 🔒 ULT
               </span>
             )}
+          </div>
+        )}
+
+        {!isTap && conditions.length > 0 && (
+          <div style={{
+            marginTop: '6px',
+            padding: '4px 6px',
+            fontSize: '8.5px',
+            background: 'rgba(255, 152, 0, 0.08)',
+            border: '1px solid rgba(255, 152, 0, 0.2)',
+            borderRadius: '3px',
+            color: '#ffe0b2',
+            wordBreak: 'break-all'
+          }}>
+            <div style={{ fontWeight: 'bold', color: '#ff9800', marginBottom: '2px' }}>
+              🎯 Map ({conditions.length} rule{conditions.length > 1 ? 's' : ''}):
+            </div>
+            <div>
+              {getConditionsSummary(conditions)}
+            </div>
           </div>
         )}
         
