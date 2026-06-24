@@ -43,18 +43,9 @@ export {
  */
 const appsList = [
   { label: 'Application Metadata', type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.APP_METADATA,   configType: ACTION_TYPES.APP_METADATA } },
-  { label: 'Application Visualization', type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.APP_VIS,    configType: ACTION_TYPES.APP_VIS } },
-  { label: '5G-Cloud',           type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.CLOUD_5G,          configType: ACTION_TYPES.CLOUD_5G } },
   { label: 'Deduplication',      type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.DEDUPLICATION,     configType: ACTION_TYPES.DEDUPLICATION } },
-  { label: 'GVHTTP2',            type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.GVHTTP2,           configType: ACTION_TYPES.GVHTTP2 } },
-  { label: 'HeaderStripping',    type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.HEADER_STRIP,      configType: ACTION_TYPES.HEADER_STRIP } },
   { label: 'Load Balancing',     type: NODE_TYPES.GIGASTREAM, initial: { algorithm: 'Round Robin' } },
   { label: 'Masking',            type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.MASKING,           configType: ACTION_TYPES.MASKING } },
-  { label: 'AMX',                type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.AMX,               configType: ACTION_TYPES.AMX } },
-  { label: 'AMI',                type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.AMI,               configType: ACTION_TYPES.AMI } },
-  { label: 'Pcapng',             type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.PCAPNG,            configType: ACTION_TYPES.PCAPNG } },
-  { label: '5G-SBI',             type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.SBI_5G,            configType: ACTION_TYPES.SBI_5G } },
-  { label: 'Sbipoe',             type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.SBIPOE,            configType: ACTION_TYPES.SBIPOE } },
   { label: 'Slicing',            type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.PACKET_SLICING,    configType: ACTION_TYPES.PACKET_SLICING } },
   { label: 'SSL Decrypt',        type: NODE_TYPES.GIGASMART, initial: { actionType: ACTION_TYPES.SSL_DECRYPT,       configType: ACTION_TYPES.SSL_DECRYPT } },
 ] as const;
