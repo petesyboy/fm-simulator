@@ -13,6 +13,7 @@ import {
 export interface TrajectoryStream extends TrafficStream {
   trafficType?: 'packet' | 'metadata';
   metadataFormat?: 'CEF' | 'JSON';
+  firstEdgeId?: string;
 }
 
 const getHardwareOpticCapacity = (node: CustomNode): number => {
@@ -252,7 +253,7 @@ const processFilterNode = (
     return { forwardStream: item.stream };
   } else {
     const dropBandwidth = item.stream.bandwidth;
-    nodeMetric.droppedPackets += dropBandwidth;
+    nodeMetric.droppedPackets += dropBandwidth * 250;
     nodeMetric.filterDroppedBps = (nodeMetric.filterDroppedBps || 0) + dropBandwidth;
     return { forwardStream: null, dropBandwidth };
   }
@@ -271,7 +272,7 @@ const processMapNode = (
     return { forwardStream: item.stream };
   } else {
     const dropBandwidth = item.stream.bandwidth;
-    nodeMetric.droppedPackets += dropBandwidth;
+    nodeMetric.droppedPackets += dropBandwidth * 250;
     nodeMetric.filterDroppedBps = (nodeMetric.filterDroppedBps || 0) + dropBandwidth;
     return { forwardStream: null, dropBandwidth };
   }
@@ -295,7 +296,7 @@ const processGigaSmartNode = (
     dropBandwidth = item.stream.bandwidth * dropFraction;
     const validBandwidth = item.stream.bandwidth * (1 - dropFraction);
 
-    nodeMetric.droppedPackets += dropBandwidth;
+    nodeMetric.droppedPackets += dropBandwidth * 250;
     nodeMetric.dedupDroppedBps = (nodeMetric.dedupDroppedBps || 0) + dropBandwidth;
     nodeMetric.txBps += validBandwidth;
     nodeMetric.txPackets += validBandwidth * 250;
@@ -307,7 +308,7 @@ const processGigaSmartNode = (
     const metadataBandwidth = item.stream.bandwidth * scale;
 
     dropBandwidth = item.stream.bandwidth * (1 - scale);
-    nodeMetric.droppedPackets += dropBandwidth;
+    nodeMetric.droppedPackets += dropBandwidth * 250;
     nodeMetric.txBps += metadataBandwidth;
     nodeMetric.txPackets += metadataBandwidth * 250;
     forwardStream = { 
@@ -337,7 +338,7 @@ const processGigaSmartNode = (
     const outputBandwidth = item.stream.bandwidth * scale;
     if (scale < 1.0) {
       dropBandwidth = item.stream.bandwidth * (1 - scale);
-      nodeMetric.droppedPackets += dropBandwidth;
+      nodeMetric.droppedPackets += dropBandwidth * 250;
     }
     nodeMetric.txBps += outputBandwidth;
     nodeMetric.txPackets += item.stream.bandwidth * 250;
@@ -366,7 +367,7 @@ const processGigaStreamNode = (
       edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + splitBandwidth;
       queue.push({
         nodeId: edge.target,
-        stream: { ...item.stream, bandwidth: splitBandwidth },
+        stream: { ...item.stream, bandwidth: splitBandwidth, firstEdgeId: item.stream.firstEdgeId || edge.id },
         edgePath: [...item.edgePath, edge.id],
       });
     });
@@ -399,7 +400,7 @@ const processHardwareNode = (
         if (actionType === 'Deduplication' || actionType === 'Dedup') {
           const dropFraction = (app.dedupRate || 20) / 100;
           const drop = item.stream.bandwidth * dropFraction;
-          nodeMetric.droppedPackets += drop;
+          nodeMetric.droppedPackets += drop * 250;
           nodeMetric.dedupDroppedBps = (nodeMetric.dedupDroppedBps || 0) + drop;
           item.stream.bandwidth -= drop;
         } else if (actionType === 'Application Metadata' || actionType === 'AMX' || actionType === 'AMI') {
@@ -421,7 +422,7 @@ const processHardwareNode = (
           if (actionType === 'SSL Decrypt' || actionType === 'Masking') scale = 0.95;
           const outBandwidth = item.stream.bandwidth * scale;
           if (scale < 1.0) {
-             nodeMetric.droppedPackets += item.stream.bandwidth * (1 - scale);
+             nodeMetric.droppedPackets += item.stream.bandwidth * (1 - scale) * 250;
           }
           item.stream.bandwidth = outBandwidth;
         }
@@ -436,7 +437,7 @@ const processHardwareNode = (
     }
   } else {
     dropBandwidth = item.stream.bandwidth;
-    nodeMetric.droppedPackets += dropBandwidth;
+    nodeMetric.droppedPackets += dropBandwidth * 250;
     nodeMetric.filterDroppedBps = (nodeMetric.filterDroppedBps || 0) + dropBandwidth;
     forwardStream = null;
   }
@@ -445,12 +446,15 @@ const processHardwareNode = (
 };
 
 const processDefaultNode = (
-  _node: CustomNode,
+  node: CustomNode,
   item: QueueItem,
   nodeMetric: NodeMetrics
 ): NodeProcessingResult => {
-  nodeMetric.txBps += item.stream.bandwidth;
-  nodeMetric.txPackets += item.stream.bandwidth * 250;
+  const alreadyAddedAtTop = node.id === item.stream.sourceNodeId && item.edgePath.length === 0;
+  if (!alreadyAddedAtTop) {
+    nodeMetric.txBps += item.stream.bandwidth;
+    nodeMetric.txPackets += item.stream.bandwidth * 250;
+  }
   return { forwardStream: item.stream };
 };
 
@@ -671,7 +675,7 @@ export const calculateSimulationStep = (
           edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + forwardStream!.bandwidth;
           queue.push({
             nodeId: edge.target,
-            stream: { ...forwardStream! },
+            stream: { ...forwardStream!, firstEdgeId: item.stream.firstEdgeId || edge.id },
             edgePath: [...item.edgePath, edge.id],
           });
         }
@@ -681,7 +685,7 @@ export const calculateSimulationStep = (
           edgeTraffic[edge.id] = (edgeTraffic[edge.id] || 0) + ms.bandwidth;
           queue.push({
             nodeId: edge.target,
-            stream: { ...ms },
+            stream: { ...ms, firstEdgeId: item.stream.firstEdgeId || edge.id },
             edgePath: [...item.edgePath, edge.id],
           });
         });
@@ -789,7 +793,8 @@ export const calculateSimulationStep = (
   const maxStreamBandwidth: Record<string, number> = {};
   Object.values(toolReceivedStreams).forEach((received) => {
     received.forEach((s) => {
-      maxStreamBandwidth[s.id] = Math.max(maxStreamBandwidth[s.id] || 0, s.bandwidth);
+      const key = s.firstEdgeId ? `${s.id}-${s.firstEdgeId}` : s.id;
+      maxStreamBandwidth[key] = Math.max(maxStreamBandwidth[key] || 0, s.bandwidth);
     });
   });
   const uniqueEgressBps = Object.values(maxStreamBandwidth).reduce((sum, bw) => sum + bw, 0);
