@@ -385,10 +385,6 @@ export const GigaStreamNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const isRunning = useStore((state) => state.isRunning);
   const metrics = useStore((state) => state.nodeMetrics[id]);
   const algorithm = (data.algorithm as string) || 'Round Robin';
-  const edges = useStore((state) => state.edges);
-  
-  const outboundEdges = edges.filter(e => e.source === id);
-  const handleCount = Math.max(1, outboundEdges.length + 1);
 
   return (
     <>
@@ -410,19 +406,10 @@ export const GigaStreamNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             <span>Tx: {formatBandwidth(metrics?.txBps)}</span>
           </div>
         )}
-        {Array.from({ length: handleCount }).map((_, idx) => {
-          const topPercent = ((idx + 1) * 100) / (handleCount + 1);
-          const handleId = idx === 0 ? 'out' : `out-${idx}`;
-          return (
-            <Handle
-              key={idx}
-              type="source"
-              position={Position.Right}
-              id={handleId}
-              style={{ top: `${topPercent}%` }}
-            />
-          );
-        })}
+        <Handle type="source" position={Position.Right} id="out" style={{ top: '20%' }} />
+        <Handle type="source" position={Position.Right} id="out-1" style={{ top: '40%' }} />
+        <Handle type="source" position={Position.Right} id="out-2" style={{ top: '60%' }} />
+        <Handle type="source" position={Position.Right} id="out-3" style={{ top: '80%' }} />
       </div>
     </>
   );
