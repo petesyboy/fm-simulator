@@ -4,7 +4,8 @@ import {
   useReactFlow,
   useViewport,
   Background,
-  Controls
+  Controls,
+  BackgroundVariant
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
@@ -177,6 +178,8 @@ const CanvasArea: React.FC = () => {
   const blockedEdges = useStore((state) => state.blockedEdges);
   const edgeMetrics = useStore((state) => state.edgeMetrics || {});
   const isRunning = useStore((state) => state.isRunning);
+  const showGrid = useStore((state) => state.showGrid);
+  const snapToGrid = useStore((state) => state.snapToGrid);
   
   const onNodesChange = useStore((state) => state.onNodesChange);
   const onEdgesChange = useStore((state) => state.onEdgesChange);
@@ -394,16 +397,15 @@ const CanvasArea: React.FC = () => {
       for (const edge of edges) {
         const srcNode = nodes.find((n) => n.id === edge.source);
         const targetNode = nodes.find((n) => n.id === edge.target);
-        if (!srcNode || !targetNode || targetNode.type !== 'toolNode') continue;
+        if (!srcNode || !targetNode) continue;
 
         const srcW = srcNode.measured?.width || srcNode.width || 170;
-        const srcH = srcNode.measured?.height || srcNode.height || 75;
-        const ax = srcNode.position.x + srcW;
-        const ay = srcNode.position.y + srcH / 2;
+        const ax = srcNode.position.x + srcW / 2;
+        const ay = srcNode.position.y;
 
-        const targetH = targetNode.measured?.height || targetNode.height || 75;
-        const bx = targetNode.position.x;
-        const by = targetNode.position.y + targetH / 2;
+        const targetW = targetNode.measured?.width || targetNode.width || 170;
+        const bx = targetNode.position.x - targetW / 2;
+        const by = targetNode.position.y;
 
         const px = position.x;
         const py = position.y;
@@ -422,7 +424,7 @@ const CanvasArea: React.FC = () => {
         const cy = ay + t * dy;
 
         const distSq = (px - cx) * (px - cx) + (py - cy) * (py - cy);
-        if (Math.sqrt(distSq) < 65) {
+        if (Math.sqrt(distSq) < 80) { // increased to 80 flow units
           foundEdgeId = edge.id;
           break;
         }
@@ -579,16 +581,15 @@ const CanvasArea: React.FC = () => {
         for (const edge of edges) {
           const srcNode = nodes.find((n) => n.id === edge.source);
           const targetNode = nodes.find((n) => n.id === edge.target);
-          if (!srcNode || !targetNode || targetNode.type !== 'toolNode') continue;
+          if (!srcNode || !targetNode) continue;
 
           const srcW = srcNode.measured?.width || srcNode.width || 170;
-          const srcH = srcNode.measured?.height || srcNode.height || 75;
-          const ax = srcNode.position.x + srcW;
-          const ay = srcNode.position.y + srcH / 2;
+          const ax = srcNode.position.x + srcW / 2;
+          const ay = srcNode.position.y;
 
-          const targetH = targetNode.measured?.height || targetNode.height || 75;
-          const bx = targetNode.position.x;
-          const by = targetNode.position.y + targetH / 2;
+          const targetW = targetNode.measured?.width || targetNode.width || 170;
+          const bx = targetNode.position.x - targetW / 2;
+          const by = targetNode.position.y;
 
           const px = position.x;
           const py = position.y;
@@ -607,7 +608,7 @@ const CanvasArea: React.FC = () => {
           const cy = ay + t * dy;
 
           const distSq = (px - cx) * (px - cx) + (py - cy) * (py - cy);
-          if (Math.sqrt(distSq) < 65) {
+          if (Math.sqrt(distSq) < 80) { // increased to 80 flow units
             edgeToInterpose = edge;
             break;
           }
@@ -723,8 +724,10 @@ const CanvasArea: React.FC = () => {
         onSelectionChange={onSelectionChange}
         deleteKeyCode={['Backspace', 'Delete']}
         nodeOrigin={[0.5, 0.5]}
+        snapToGrid={snapToGrid}
+        snapGrid={[15, 15]}
       >
-        <Background />
+        {showGrid && <Background variant={BackgroundVariant.Lines} color="rgba(255,255,255,0.06)" gap={15} size={1} />}
         <Controls />
       </ReactFlow>
 

@@ -136,6 +136,10 @@ export type RFState = {
   setProjectLicenseMode: (mode: 'HTL' | 'Perpetual') => void;
   setDefaultTermDuration: (duration: string) => void;
   setDisableDcWarnings: (disable: boolean) => void;
+  showGrid: boolean;
+  snapToGrid: boolean;
+  setShowGrid: (show: boolean) => void;
+  setSnapToGrid: (snap: boolean) => void;
   addTrafficStream: (stream: TrafficStream) => void;
   updateTrafficStream: (id: string, stream: Partial<TrafficStream>) => void;
   deleteTrafficStream: (id: string) => void;
@@ -419,6 +423,8 @@ export const useStore = create<RFState>((set, get) => ({
   defaultTermDuration: '36',
   disableDcWarnings: false,
   draggedNodeType: null,
+  showGrid: true,
+  snapToGrid: false,
   trafficStreams: initialTraffic,
   nodeMetrics: {},
   edgeMetrics: {},
@@ -570,6 +576,8 @@ export const useStore = create<RFState>((set, get) => ({
   setProjectLicenseMode: (mode) => set({ projectLicenseMode: mode }),
   setDefaultTermDuration: (duration) => set({ defaultTermDuration: duration }),
   setDisableDcWarnings: (disable) => set({ disableDcWarnings: disable }),
+  setShowGrid: (show) => set({ showGrid: show }),
+  setSnapToGrid: (snap) => set({ snapToGrid: snap }),
 
   addTrafficStream: (stream: TrafficStream) => {
     set({ trafficStreams: [...get().trafficStreams, stream] });

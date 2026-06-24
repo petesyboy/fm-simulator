@@ -80,6 +80,10 @@ const ProjectSettingsModal: React.FC<{
   const setDefaultTermDuration = useStore((state) => state.setDefaultTermDuration);
   const disableDcWarnings = useStore((state) => state.disableDcWarnings);
   const setDisableDcWarnings = useStore((state) => state.setDisableDcWarnings);
+  const showGrid = useStore((state) => state.showGrid);
+  const setShowGrid = useStore((state) => state.setShowGrid);
+  const snapToGrid = useStore((state) => state.snapToGrid);
+  const setSnapToGrid = useStore((state) => state.setSnapToGrid);
 
   const handleTermBlur = () => {
     let parsed = parseInt(defaultTermDuration, 10);
@@ -167,6 +171,32 @@ const ProjectSettingsModal: React.FC<{
             />
             <label htmlFor="modalDisableDcWarnings" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
               Disable DC Power Warnings
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+            <input 
+              type="checkbox" 
+              checked={showGrid} 
+              onChange={(e) => setShowGrid(e.target.checked)} 
+              id="modalShowGrid"
+              style={{ cursor: 'pointer' }}
+            />
+            <label htmlFor="modalShowGrid" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
+              Show Background Grid
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+            <input 
+              type="checkbox" 
+              checked={snapToGrid} 
+              onChange={(e) => setSnapToGrid(e.target.checked)} 
+              id="modalSnapToGrid"
+              style={{ cursor: 'pointer' }}
+            />
+            <label htmlFor="modalSnapToGrid" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
+              Snap Nodes to Grid
             </label>
           </div>
         </div>
