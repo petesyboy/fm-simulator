@@ -71,6 +71,127 @@ const ConfirmModal: React.FC<{
   </div>
 );
 
+const ProjectSettingsModal: React.FC<{
+  onClose: () => void;
+}> = ({ onClose }) => {
+  const projectLicenseMode = useStore((state) => state.projectLicenseMode);
+  const setProjectLicenseMode = useStore((state) => state.setProjectLicenseMode);
+  const defaultTermDuration = useStore((state) => state.defaultTermDuration);
+  const setDefaultTermDuration = useStore((state) => state.setDefaultTermDuration);
+  const disableDcWarnings = useStore((state) => state.disableDcWarnings);
+  const setDisableDcWarnings = useStore((state) => state.setDisableDcWarnings);
+
+  const handleTermBlur = () => {
+    let parsed = parseInt(defaultTermDuration, 10);
+    if (isNaN(parsed) || parsed < 1) parsed = 1;
+    if (parsed > 120) parsed = 120;
+    setDefaultTermDuration(parsed.toString());
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 10000,
+      background: 'rgba(0,0,0,0.65)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backdropFilter: 'blur(3px)',
+    }}>
+      <div style={{
+        background: '#161616',
+        border: '1px solid #333',
+        borderRadius: '8px',
+        padding: '24px',
+        width: '320px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <h3 style={{ margin: 0, fontSize: '14px', color: '#ff9800', fontWeight: 'bold' }}>⚙️ Project Settings</h3>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '10px', fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Default License Mode</label>
+            <select
+              value={projectLicenseMode}
+              onChange={(e) => setProjectLicenseMode(e.target.value as 'HTL' | 'Perpetual')}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                background: '#121212',
+                border: '1px solid #2d2d2d',
+                borderRadius: '4px',
+                color: '#e0e0e0',
+                fontSize: '12px',
+                outline: 'none'
+              }}
+            >
+              <option value="HTL">Hybrid Term Licensing (HTL)</option>
+              <option value="Perpetual">Perpetual</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '10px', fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Default Term Duration (Months)</label>
+            <input 
+              type="number" 
+              min="1" 
+              max="120" 
+              value={defaultTermDuration} 
+              onChange={(e) => setDefaultTermDuration(e.target.value)} 
+              onBlur={handleTermBlur}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                background: '#121212',
+                border: '1px solid #2d2d2d',
+                borderRadius: '4px',
+                color: '#e0e0e0',
+                fontSize: '12px',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+            <input 
+              type="checkbox" 
+              checked={disableDcWarnings} 
+              onChange={(e) => setDisableDcWarnings(e.target.checked)} 
+              id="modalDisableDcWarnings"
+              style={{ cursor: 'pointer' }}
+            />
+            <label htmlFor="modalDisableDcWarnings" style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>
+              Disable DC Power Warnings
+            </label>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '7px 16px',
+              background: '#2a2a2a',
+              border: '1px solid #444',
+              color: '#aaa',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 import { generateBom, validateConfiguration } from '../utils/bomEngine';
 
 const BomModal: React.FC<{
@@ -184,6 +305,7 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
   // Local UI state for the toast and confirm modal
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showBom, setShowBom] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [logoClicks, setLogoClicks] = useState<number[]>([]);
 
   const handleLogoClick = () => {
@@ -213,6 +335,7 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
       )}
 
       {showBom && <BomModal onClose={() => setShowBom(false)} />}
+      {showSettings && <ProjectSettingsModal onClose={() => setShowSettings(false)} />}
 
       <div className="header-wrapper">
         {/* ── Top Brand Bar ── */}
@@ -291,6 +414,9 @@ const Header: React.FC<HeaderProps> = ({ onSaveClick, onLoadClick }) => {
             </button>
             <button className="header-btn secondary" onClick={loadDemo}>
               🔄 Reset Demo
+            </button>
+            <button className="header-btn secondary" onClick={() => setShowSettings(true)}>
+              ⚙️ Project Settings
             </button>
             {/* Clear opens our custom confirm modal instead of window.confirm() */}
             <button onClick={handleClearRequest} className="header-btn danger">

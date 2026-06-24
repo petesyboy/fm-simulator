@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../../store/store';
 import { formatBandwidth, formatPackets } from '../../utils/format';
 import { NODE_TYPES } from '../../constants/nodeTypes';
-import { FormGroup } from './LiveMetrics';
 
 interface DashboardPanelProps {
   isRunning: boolean;
@@ -12,13 +11,6 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({ isRunning }) => 
   const nodes           = useStore((state) => state.nodes);
   const nodeMetrics     = useStore((state) => state.nodeMetrics);
   const uniqueEgressBps = useStore((state) => state.uniqueEgressBps);
-
-  const projectLicenseMode = useStore((state) => state.projectLicenseMode);
-  const setProjectLicenseMode = useStore((state) => state.setProjectLicenseMode);
-  const defaultTermDuration = useStore((state) => state.defaultTermDuration);
-  const setDefaultTermDuration = useStore((state) => state.setDefaultTermDuration);
-  const disableDcWarnings = useStore((state) => state.disableDcWarnings);
-  const setDisableDcWarnings = useStore((state) => state.setDisableDcWarnings);
 
   let totalIngest = 0;
   let totalDedupDrops = 0;
@@ -44,13 +36,6 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({ isRunning }) => 
   const reductionRaw     = Math.max(0, totalIngest - totalEgress);
   const reductionPercent = totalIngest > 0 ? (reductionRaw / totalIngest) * 100 : 0;
 
-  const handleTermBlur = () => {
-    let parsed = parseInt(defaultTermDuration, 10);
-    if (isNaN(parsed) || parsed < 1) parsed = 1;
-    if (parsed > 120) parsed = 120;
-    setDefaultTermDuration(parsed.toString());
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '320px', height: '100%', padding: '20px', overflowY: 'auto', boxSizing: 'border-box' }}>
       <div>
@@ -58,44 +43,6 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({ isRunning }) => 
         <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)' }}>
           Real-time visibility into the entire network visibility fabric.
         </p>
-      </div>
-
-      <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Project Settings
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <FormGroup label="Default License Mode">
-            <select
-              value={projectLicenseMode}
-              onChange={(e) => setProjectLicenseMode(e.target.value as 'HTL' | 'Perpetual')}
-            >
-              <option value="HTL">Hybrid Term Licensing (HTL)</option>
-              <option value="Perpetual">Perpetual</option>
-            </select>
-          </FormGroup>
-          <FormGroup label="Default Term Duration (Months)">
-            <input 
-              type="number" 
-              min="1" 
-              max="120" 
-              value={defaultTermDuration} 
-              onChange={(e) => setDefaultTermDuration(e.target.value)} 
-              onBlur={handleTermBlur}
-            />
-          </FormGroup>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input 
-              type="checkbox" 
-              checked={disableDcWarnings} 
-              onChange={(e) => setDisableDcWarnings(e.target.checked)} 
-              id="disableDcWarnings"
-            />
-            <label htmlFor="disableDcWarnings" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Disable DC Power Warnings
-            </label>
-          </div>
-        </div>
       </div>
 
       {isRunning ? (
