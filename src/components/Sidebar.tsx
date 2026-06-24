@@ -206,6 +206,8 @@ const Sidebar: React.FC = () => {
                       { label: 'Corelight', desc: 'Corelight Tool', type: NODE_TYPES.TOOL, icon: PacketToolIcon, initial: { configType: CONFIG_TYPES.PACKET_TOOL, toolName: 'Corelight', expectedType: 'packet' } },
                       { label: 'Endace Capture', desc: 'Endace Capture Appliance', type: NODE_TYPES.TOOL, icon: PacketToolIcon, initial: { configType: CONFIG_TYPES.PACKET_TOOL, toolName: 'Endace Packet Capture Appliance', expectedType: 'packet' } },
                       { label: 'Wireshark', desc: 'Wireshark Tool', type: NODE_TYPES.TOOL, icon: WiresharkIcon, initial: { configType: CONFIG_TYPES.PACKET_TOOL, toolName: 'Wireshark', expectedType: 'packet' } },
+                      { label: 'ForeScout', desc: 'ForeScout Tool', type: NODE_TYPES.TOOL, icon: PacketToolIcon, initial: { configType: CONFIG_TYPES.PACKET_TOOL, toolName: 'ForeScout', expectedType: 'packet' } },
+                      { label: 'Nozomi', desc: 'Nozomi Tool', type: NODE_TYPES.TOOL, icon: PacketToolIcon, initial: { configType: CONFIG_TYPES.PACKET_TOOL, toolName: 'Nozomi', expectedType: 'packet' } },
                     ]
                   },
                   {
